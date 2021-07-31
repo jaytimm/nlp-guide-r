@@ -1,6 +1,16 @@
 # NLP with R: some notes
 
-## A summary of some R-based, NLP workflows. I principally use the `udpipe` (!) package for working with text data. It is a beast, and it keeps things simple from a data class perspective (ie, data frames only). For tokenization tasks and quick text search, I use the `corpus` package. `text2vec` is a lovely package as well, and is super useful for building some common NLP data structures (eg, TCMs & DTMs) quickly. I have tried them all, and these are the guys I have landed on. I am a picky linguist, and they are flexible & lightweight. Mostly a resource for self.
+A summary of some R-based, NLP workflows. I principally use the `udpipe`
+(!) package for working with text data. It is a beast, and it keeps
+things simple from a data class perspective (ie, data frames only). For
+tokenization tasks and quick text search, I use the `corpus` package.
+`text2vec` is a lovely package as well, and is super useful for building
+some common NLP data structures (eg, TCMs & DTMs) quickly. I have tried
+them all, and these are the guys I have landed on. I am a picky
+linguist, and they are flexible & lightweight. Mostly a resource for
+self.
+
+------------------------------------------------------------------------
 
 -   [NLP with R: some notes](#nlp-with-r:-some-notes)
     -   [Quick live text](#quick-live-text)
@@ -114,14 +124,14 @@ collocations0 %>% sample_n(6) %>%
   knitr::kable()
 ```
 
-| keyword                     | freq |    pmi |
-|:----------------------------|-----:|-------:|
-| attorney general            |    6 | 10.562 |
-| for disease control         |    7 | 10.368 |
-| the united states           |    9 |  8.845 |
-| united states               |    9 |  8.846 |
-| wear masks                  |    6 |  9.785 |
-| centers for disease control |    7 | 10.367 |
+| keyword           | freq |    pmi |
+|:------------------|-----:|-------:|
+| wear masks        |    7 | 10.179 |
+| attorney general  |    6 | 10.693 |
+| the united states |    9 |  9.107 |
+| delta variant     |    6 | 10.471 |
+| united states     |    9 |  9.108 |
+| the white house   |    9 |  8.641 |
 
 ### Noun phrases
 
@@ -149,13 +159,13 @@ nps1 %>%
   knitr::kable()
 ```
 
-| keyword                           | pattern | ngram |   n |
-|:----------------------------------|:--------|------:|----:|
-| health_care_workers               | NNN     |     3 |   1 |
-| scientific_breakthroughs          | AN      |     2 |   1 |
-| other_areas                       | AN      |     2 |   1 |
-| 0.0063_percent                    | AN      |     2 |   1 |
-| attorney_general_william_p.\_barr | NANNN   |     5 |   1 |
+| keyword                         | pattern | ngram |   n |
+|:--------------------------------|:--------|------:|----:|
+| special_session_that_the_exodus | ANPDN   |     5 |   1 |
+| trump’s_tax_returns             | NNN     |     3 |   1 |
+| several_recent_efforts          | AAN     |     3 |   1 |
+| house_members                   | NN      |     2 |   1 |
+| different_outcome               | AN      |     2 |   1 |
 
 ### Tokenizing multi-word expressions
 

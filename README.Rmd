@@ -6,7 +6,11 @@ output:
 
 # NLP with R: some notes
 
+
+
 A summary of some R-based, NLP workflows.  I principally use the `udpipe` (!) package for working with text data.  It is a beast, and it keeps things simple from a data class perspective (ie, data frames only).  For tokenization tasks and quick text search, I use the `corpus` package.  `text2vec` is a lovely package as well, and is super useful for building some common NLP data structures (eg, TCMs & DTMs) quickly.  I have tried them all, and these are the guys I have landed on. I am a picky linguist, and they are flexible & lightweight.  Mostly a resource for self.  
+
+
 
 
 ---
