@@ -1,32 +1,35 @@
-A summary of some R-based, NLP workflows. I principally use the
-`udpipe`, `corpus`, and `text2vec` packages to work with text data in R.
+# NLP with R: some notes
 
--   [Quick live text](#quick-live-text)
-    -   [News article extraction](#news-article-extraction)
-    -   [PubMed abstract extraction](#pubmed-abstract-extraction)
-    -   [Twiiter](#twiiter)
--   [Processing](#processing)
-    -   [Tokenization](#tokenization)
-    -   [Sentence tokenization](#sentence-tokenization)
-    -   [Annotation](#annotation)
--   [Multi-word expressions](#multi-word-expressions)
-    -   [Collocations](#collocations)
-    -   [Noun phrases](#noun-phrases)
-    -   [Tokenizing multi-word
-        expressions](#tokenizing-multi-word-expressions)
-    -   [Dictionary-based entity
-        recognition](#dictionary-based-entity-recognition)
-    -   [Rebuilding text](#rebuilding-text)
--   [Search](#search)
-    -   [Search in context](#search-in-context)
-    -   [Highlight](#highlight)
-    -   [More complex patterns](#more-complex-patterns)
--   [Odds](#odds)
-    -   [Visualizing dependencies](#visualizing-dependencies)
+## A summary of some R-based, NLP workflows. I principally use the `udpipe` (!) package for working with text data. It is a beast, and it keeps things simple from a data class perspective (ie, data frames only). For tokenization tasks and quick text search, I use the `corpus` package. `text2vec` is a lovely package as well, and is super useful for building some common NLP data structures (eg, TCMs & DTMs) quickly. I have tried them all, and these are the guys I have landed on. I am a picky linguist, and they are flexible & lightweight. Mostly a resource for self.
+
+-   [NLP with R: some notes](#nlp-with-r:-some-notes)
+    -   [Quick live text](#quick-live-text)
+        -   [Online news articles](#online-news-articles)
+        -   [PubMed abstracts](#pubmed-abstracts)
+        -   [Tweets](#tweets)
+    -   [Processing](#processing)
+        -   [Tokenization](#tokenization)
+        -   [Sentence tokenization](#sentence-tokenization)
+        -   [Annotation](#annotation)
+    -   [Multi-word expressions](#multi-word-expressions)
+        -   [Collocations](#collocations)
+        -   [Noun phrases](#noun-phrases)
+        -   [Tokenizing multi-word
+            expressions](#tokenizing-multi-word-expressions)
+        -   [Dictionary-based entity
+            recognition](#dictionary-based-entity-recognition)
+        -   [Rebuilding text](#rebuilding-text)
+    -   [doc2vec](#doc2vec)
+    -   [Search](#search)
+        -   [Search in context](#search-in-context)
+        -   [Highlight](#highlight)
+        -   [More complex patterns](#more-complex-patterns)
+    -   [Odds](#odds)
+        -   [Visualizing dependencies](#visualizing-dependencies)
 
 ## Quick live text
 
-### News article extraction
+### Online news articles
 
 ``` r
 library(tidyverse)
@@ -35,7 +38,7 @@ news <- quicknews::qnews_extract_article(url = meta$link,
                                          cores = 7)
 ```
 
-### PubMed abstract extraction
+### PubMed abstracts
 
 ``` r
 s0 <- PubmedMTK::pmtk_search_pubmed(search_term = 'medical marijuana', 
@@ -47,7 +50,7 @@ s1 <- PubmedMTK::pmtk_get_records2(pmids = s0$pmid,
                                    )
 ```
 
-### Twiiter
+### Tweets
 
 ## Processing
 
@@ -55,7 +58,6 @@ s1 <- PubmedMTK::pmtk_get_records2(pmids = s0$pmid,
 
 ``` r
 a1 <- corpus::text_tokens(news$text,
-                          
                           
   filter = corpus::text_filter(
     map_case = TRUE, 
@@ -112,14 +114,14 @@ collocations0 %>% sample_n(6) %>%
   knitr::kable()
 ```
 
-| keyword            | freq |    pmi |
-|:-------------------|-----:|-------:|
-| lashkar gah        |    6 | 10.678 |
-| united states      |    9 |  8.874 |
-| the white house    |   11 |  8.397 |
-| the delta variant  |    8 |  9.855 |
-| justice department |    7 |  9.064 |
-| the united states  |    9 |  8.873 |
+| keyword                     | freq |    pmi |
+|:----------------------------|-----:|-------:|
+| attorney general            |    6 | 10.562 |
+| for disease control         |    7 | 10.368 |
+| the united states           |    9 |  8.845 |
+| united states               |    9 |  8.846 |
+| wear masks                  |    6 |  9.785 |
+| centers for disease control |    7 | 10.367 |
 
 ### Noun phrases
 
@@ -147,13 +149,13 @@ nps1 %>%
   knitr::kable()
 ```
 
-| keyword                     | pattern | ngram |   n |
-|:----------------------------|:--------|------:|----:|
-| two_independents_in_support | ANPN    |     4 |   1 |
-| federal_employee            | AN      |     2 |   1 |
-| personal_crises             | AN      |     2 |   1 |
-| saturday_evening            | NN      |     2 |   1 |
-| one_kaiser                  | AN      |     2 |   1 |
+| keyword                           | pattern | ngram |   n |
+|:----------------------------------|:--------|------:|----:|
+| health_care_workers               | NNN     |     3 |   1 |
+| scientific_breakthroughs          | AN      |     2 |   1 |
+| other_areas                       | AN      |     2 |   1 |
+| 0.0063_percent                    | AN      |     2 |   1 |
+| attorney_general_william_p.\_barr | NANNN   |     5 |   1 |
 
 ### Tokenizing multi-word expressions
 
@@ -185,6 +187,8 @@ x0 %>%
 ### Dictionary-based entity recognition
 
 ### Rebuilding text
+
+## doc2vec
 
 ## Search
 

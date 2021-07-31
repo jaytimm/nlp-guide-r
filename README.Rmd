@@ -4,8 +4,13 @@ output:
     variant: markdown_github
 ---
 
+# NLP with R: some notes
 
-A summary of some R-based, NLP workflows.  I principally use the `udpipe`, `corpus`, and `text2vec` packages to work with text data in R.    
+A summary of some R-based, NLP workflows.  I principally use the `udpipe` (!) package for working with text data.  It is a beast, and it keeps things simple from a data class perspective (ie, data frames only).  For tokenization tasks and quick text search, I use the `corpus` package.  `text2vec` is a lovely package as well, and is super useful for building some common NLP data structures (eg, TCMs & DTMs) quickly.  I have tried them all, and these are the guys I have landed on. I am a picky linguist, and they are flexible & lightweight.  Mostly a resource for self.  
+
+
+---
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -21,7 +26,7 @@ render_toc("/home/jtimm/pCloudDrive/GitHub/nlp-cheat-r/README.Rmd")
 
 ## Quick live text
 
-### News article extraction
+### Online news articles
 
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
@@ -32,7 +37,7 @@ news <- quicknews::qnews_extract_article(url = meta$link,
 
 
 
-### PubMed abstract extraction
+### PubMed abstracts
 
 ```{r eval=FALSE}
 s0 <- PubmedMTK::pmtk_search_pubmed(search_term = 'medical marijuana', 
@@ -45,7 +50,12 @@ s1 <- PubmedMTK::pmtk_get_records2(pmids = s0$pmid,
 ```
 
 
-### Twiiter 
+### Tweets
+
+```{r}
+
+```
+
 
 
 
@@ -55,7 +65,6 @@ s1 <- PubmedMTK::pmtk_get_records2(pmids = s0$pmid,
 
 ```{r}
 a1 <- corpus::text_tokens(news$text,
-                          
                           
   filter = corpus::text_filter(
     map_case = TRUE, 
@@ -175,6 +184,8 @@ x0 %>%
 ### Rebuilding text
 
 
+
+## doc2vec
 
 ## Search
 
