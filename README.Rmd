@@ -8,9 +8,7 @@ output:
 
 
 
-A summary of some R-based, NLP workflows.  I principally use the `udpipe` (!) package for working with text data.  It is a beast, and it keeps things simple from a data class perspective (ie, data frames only).  For tokenization tasks and quick text search, I use the `corpus` package.  `text2vec` is a lovely package as well, and is super useful for building some common NLP data structures (eg, TCMs & DTMs) quickly.  I have tried them all, and these are the guys I have landed on. I am a picky linguist, and they are flexible & lightweight.  Mostly a resource for self.  
-
-
+A summary of some R-based, NLP workflows.  I principally use the `udpipe` (!) package for working with text data.  It is a beast, and it keeps things simple from a data class perspective (ie, data frames only).
 
 
 ---
@@ -34,8 +32,8 @@ render_toc("/home/jtimm/pCloudDrive/GitHub/nlp-cheat-r/README.Rmd")
 
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
-meta <- quicknews::qnews_get_newsmeta()
-news <- quicknews::qnews_extract_article(url = meta$link,
+meta <- quicknews::qnews_get_newsmeta('joe biden')
+news <- quicknews::qnews_extract_article(url = meta$link[1:20],
                                          cores = 7)
 ```
 
@@ -56,8 +54,16 @@ s1 <- PubmedMTK::pmtk_get_records2(pmids = s0$pmid,
 
 ### Tweets
 
-```{r}
-
+```{r eval=FALSE}
+congress_tweets <- rtweet::get_timeline( 
+  house_meta$twitter, 
+  n = 2000,
+  check=FALSE) %>%
+  mutate(created_at = as.Date(gsub(' .*$', '', created_at))) %>%
+  filter(is_quote == 'FALSE' & 
+           is_retweet == 'FALSE' & 
+           created_at > '2019-01-02' &
+           display_text_width > 0)
 ```
 
 
@@ -94,6 +100,14 @@ names(a1) <- 1:nrow(news)
 
 ### Sentence tokenization
 
+```{r}
+sentences <- PubmedMTK::pmtk_toke_sentences(text = news$text,
+                                            doc_id = 1:nrow(news))
+
+sentences %>% head() %>% knitr::kable()
+```
+
+
 
 ### Annotation
 
@@ -107,7 +121,7 @@ setwd(paste0(udmodel_dir, 'model'))
 udmodel <- udpipe::udpipe_load_model('english-ewt-ud-2.3-181115.udpipe')
 
 x0 <- udpipe::udpipe(object = udmodel,
-                     x = a1[1:10],
+                     x = a1,
                      tagger = 'default', #'none'
                      parser = 'none')
 ```
@@ -125,10 +139,11 @@ collocations <- udpipe::collocation(x = x0,
                                     ngram_max = 5,
                                     sep = ' ')
 
-collocations0 <- subset(collocations, freq > 5 & pmi > 8 &
+collocations0 <- subset(collocations, freq > 1 & pmi > 5 &
                           !grepl('[[:punct:]]', keyword))
 
-collocations0 %>% sample_n(6) %>%
+collocations0 %>% 
+  sample_n(6) %>%
   mutate(pmi = round(pmi, 3)) %>%
   select(keyword, freq, pmi) %>%
   knitr::kable()
@@ -195,13 +210,79 @@ x0 %>%
 
 ### Search in context
 
+```{r}
+egs <- PubmedMTK::pmtk_locate_term(text = a1,
+                                   doc_id = x0$doc_id,
+                                   term = c('joe biden'),
+                                   stem = F,
+                                   window = 10)
+
+egs %>% head() %>% knitr::kable()
+```
+
+
 ### Highlight 
+
+```{r}
+egs$kwic <- paste0('... ', egs$lhs, ' `', egs$instance, '` ', egs$rhs, ' ...')
+knitr::kable(egs[1:8, c(1,5)])
+```
+
 
 ### More complex patterns
 
 ## Odds
 
 ### Visualizing dependencies
+
+```{r}
+sentence <- "The green giant wishes for Jackie-boy only good things"
+sent_depend <- udpipe::udpipe(udmodel, x = sentence)
+
+plot_annotation <- function(x, size = 3){
+  
+  x <- x[!is.na(x$head_token_id), ]
+  x <- x[x$sentence_id %in% min(x$sentence_id), ]
+  edges <- x[x$head_token_id != 0, c("token_id", 
+                                     "head_token_id", 
+                                     "dep_rel")]
+  edges$label <- edges$dep_rel
+  
+  g <- igraph::graph_from_data_frame(edges,
+                                     vertices = x[, c("token_id",
+                                                      "token",
+                                                      "lemma",
+                                                      "upos",
+                                                      "xpos",
+                                                      "feats")],
+                                     directed = TRUE)
+  
+  ggraph::ggraph(g, layout = "linear") +
+    ggraph::geom_edge_arc(ggplot2::aes(label = dep_rel, vjust = -0.20),
+                          arrow = grid::arrow(length = unit(4, 'mm'), 
+                                              ends = "last", 
+                                              type = "closed"),
+                          end_cap = ggraph::label_rect("w123"),
+                          label_colour = "#55752f", 
+                          check_overlap = TRUE, 
+                          label_size = size) +
+    
+    ggraph::geom_node_label(ggplot2::aes(label = token), 
+                            col = "steelblue", 
+                            size = size, 
+                            fontface = "bold") +
+    
+    ggraph::geom_node_text(ggplot2::aes(label = upos), 
+                           nudge_y = -0.35, 
+                           size = size) +
+    
+    ggraph::theme_graph() 
+}
+
+
+plot_annotation(sent_depend, size = 4) +
+  labs(title = sentence)
+```
 
 
 

@@ -2,13 +2,7 @@
 
 A summary of some R-based, NLP workflows. I principally use the `udpipe`
 (!) package for working with text data. It is a beast, and it keeps
-things simple from a data class perspective (ie, data frames only). For
-tokenization tasks and quick text search, I use the `corpus` package.
-`text2vec` is a lovely package as well, and is super useful for building
-some common NLP data structures (eg, TCMs & DTMs) quickly. I have tried
-them all, and these are the guys I have landed on. I am a picky
-linguist, and they are flexible & lightweight. Mostly a resource for
-self.
+things simple from a data class perspective (ie, data frames only).
 
 ------------------------------------------------------------------------
 
@@ -43,8 +37,8 @@ self.
 
 ``` r
 library(tidyverse)
-meta <- quicknews::qnews_get_newsmeta()
-news <- quicknews::qnews_extract_article(url = meta$link,
+meta <- quicknews::qnews_get_newsmeta('joe biden')
+news <- quicknews::qnews_extract_article(url = meta$link[1:20],
                                          cores = 7)
 ```
 
@@ -61,6 +55,18 @@ s1 <- PubmedMTK::pmtk_get_records2(pmids = s0$pmid,
 ```
 
 ### Tweets
+
+``` r
+congress_tweets <- rtweet::get_timeline( 
+  house_meta$twitter, 
+  n = 2000,
+  check=FALSE) %>%
+  mutate(created_at = as.Date(gsub(' .*$', '', created_at))) %>%
+  filter(is_quote == 'FALSE' & 
+           is_retweet == 'FALSE' & 
+           created_at > '2019-01-02' &
+           display_text_width > 0)
+```
 
 ## Processing
 
@@ -92,6 +98,22 @@ names(a1) <- 1:nrow(news)
 
 ### Sentence tokenization
 
+``` r
+sentences <- PubmedMTK::pmtk_toke_sentences(text = news$text,
+                                            doc_id = 1:nrow(news))
+
+sentences %>% head() %>% knitr::kable()
+```
+
+| doc_id | text                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|:-------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1.1    | In a city of ambitious influencers, a shadow cabinet hopes it can summon a new New Deal.                                                                                                                                                                                                                                                                                                                                    |
+| 1.2    | Ruby Cramer is a senior staff writer at POLITICO and POLITICO Magazine.                                                                                                                                                                                                                                                                                                                                                     |
+| 1.3    | One recent Wednesday evening, a small of group of concerned citizens gathered on a Zoom call to talk about how to get the attention of the president.                                                                                                                                                                                                                                                                       |
+| 1.4    | At 6 p.m., two rows of elderly faces appeared on screen, staring into the camera: June Hopkins, Henry Scott Wallace, Tomlin Perkins Coggeshall and James Roosevelt Jr. If their names sound vaguely familiar it’s because their relatives—Harry Hopkins, Henry Wallace, Frances Perkins and Franklin Delano Roosevelt—formed the nucleus of one of the most famous and influential Oval Office rosters in American history. |
+| 1.5    | Ninety years later, these descendants of the FDR administration have reconstituted his Cabinet.                                                                                                                                                                                                                                                                                                                             |
+| 1.6    | And they have played their roles with a conscientious sense of purpose.                                                                                                                                                                                                                                                                                                                                                     |
+
 ### Annotation
 
 ``` r
@@ -99,7 +121,7 @@ setwd(paste0(udmodel_dir, 'model'))
 udmodel <- udpipe::udpipe_load_model('english-ewt-ud-2.3-181115.udpipe')
 
 x0 <- udpipe::udpipe(object = udmodel,
-                     x = a1[1:10],
+                     x = a1,
                      tagger = 'default', #'none'
                      parser = 'none')
 ```
@@ -115,23 +137,24 @@ collocations <- udpipe::collocation(x = x0,
                                     ngram_max = 5,
                                     sep = ' ')
 
-collocations0 <- subset(collocations, freq > 5 & pmi > 8 &
+collocations0 <- subset(collocations, freq > 1 & pmi > 5 &
                           !grepl('[[:punct:]]', keyword))
 
-collocations0 %>% sample_n(6) %>%
+collocations0 %>% 
+  sample_n(6) %>%
   mutate(pmi = round(pmi, 3)) %>%
   select(keyword, freq, pmi) %>%
   knitr::kable()
 ```
 
-| keyword           | freq |    pmi |
-|:------------------|-----:|-------:|
-| wear masks        |    7 | 10.179 |
-| attorney general  |    6 | 10.693 |
-| the united states |    9 |  9.107 |
-| delta variant     |    6 | 10.471 |
-| united states     |    9 |  9.108 |
-| the white house   |    9 |  8.641 |
+| keyword               | freq |    pmi |
+|:----------------------|-----:|-------:|
+| as well               |    8 |  7.142 |
+| touch with the latest |    3 | 11.717 |
+| ways you              |    3 |  8.329 |
+| those who             |    3 |  6.461 |
+| we would talk         |    3 | 11.398 |
+| town hall             |    4 | 11.722 |
 
 ### Noun phrases
 
@@ -159,13 +182,13 @@ nps1 %>%
   knitr::kable()
 ```
 
-| keyword                         | pattern | ngram |   n |
-|:--------------------------------|:--------|------:|----:|
-| special_session_that_the_exodus | ANPDN   |     5 |   1 |
-| trump’s_tax_returns             | NNN     |     3 |   1 |
-| several_recent_efforts          | AAN     |     3 |   1 |
-| house_members                   | NN      |     2 |   1 |
-| different_outcome               | AN      |     2 |   1 |
+| keyword                           | pattern | ngram |   n |
+|:----------------------------------|:--------|------:|----:|
+| space_flights                     | NN      |     2 |   1 |
+| civil_rights_legislation          | ANN     |     3 |   1 |
+| 1_trillion_infrastructure_package | AANN    |     4 |   1 |
+| party_chair_jane                  | NNN     |     3 |   1 |
+| criminal-justice_organization     | NN      |     2 |   1 |
 
 ### Tokenizing multi-word expressions
 
@@ -185,14 +208,14 @@ x0 %>%
   knitr::kable()
 ```
 
-| doc_id | token          | lemma          | upos  | xpos | newness        |
-|:-------|:---------------|:---------------|:------|:-----|:---------------|
-| 1      | the            | the            | DET   | DT   | the            |
-| 1      | administration | administration | NOUN  | NN   | administration |
-| 1      | made           | make           | VERB  | VBD  | made           |
-| 1      | a              | a              | DET   | DT   | a              |
-| 1      | last-ditch     | last-ditch     | NOUN  | NN   | last-ditch     |
-| 1      | ,              | ,              | PUNCT | ,    | ,              |
+| doc_id | token       | lemma      | upos | xpos | newness               |
+|:-------|:------------|:-----------|:-----|:-----|:----------------------|
+| 1      | in          | in         | ADP  | IN   | in                    |
+| 1      | a           | a          | DET  | DT   | a                     |
+| 1      | city        | city       | NOUN | NN   | city                  |
+| 1      | of          | of         | ADP  | IN   | of                    |
+| 1      | ambitious   | ambitious  | ADJ  | JJ   | ambitious_influencers |
+| 1      | influencers | influencer | NOUN | NNS  | NA                    |
 
 ### Dictionary-based entity recognition
 
@@ -204,10 +227,96 @@ x0 %>%
 
 ### Search in context
 
+``` r
+egs <- PubmedMTK::pmtk_locate_term(text = a1,
+                                   doc_id = x0$doc_id,
+                                   term = c('joe biden'),
+                                   stem = F,
+                                   window = 10)
+
+egs %>% head() %>% knitr::kable()
+```
+
+| doc_id | lhs                                                                   | instance  | rhs                                                                 |
+|:-------|:----------------------------------------------------------------------|:----------|:--------------------------------------------------------------------|
+| 1      | legislative agenda as transformational as the new deal . they want    | joe biden | to embrace the idea of an “ activist ” government .                 |
+| 1      | the senate to advance his bipartisan compromise last week , president | joe biden | took a big step toward upgrading america’s infrastructure .         |
+| 1      | new york ( ap ) —                                                     | joe biden | wagered his campaign and now his presidency on the premise that     |
+| 1      | . among independents , the downdraft hit 26 points . as               | joe biden | might say , “ gee , what happened ? ” if                            |
+| 1      | how bad are things for                                                | joe biden | ? so bad that even the new york times is getting                    |
+| 1      | washington ( ap ) — for president                                     | joe biden | and the senators laboring over a nearly $ 1 trillion infrastructure |
+
 ### Highlight
+
+``` r
+egs$kwic <- paste0('... ', egs$lhs, ' `', egs$instance, '` ', egs$rhs, ' ...')
+knitr::kable(egs[1:8, c(1,5)])
+```
+
+| doc_id | kwic                                                                                                                                              |
+|:-------|:--------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1      | … legislative agenda as transformational as the new deal . they want `joe biden` to embrace the idea of an “ activist ” government . …            |
+| 1      | … the senate to advance his bipartisan compromise last week , president `joe biden` took a big step toward upgrading america’s infrastructure . … |
+| 1      | … new york ( ap ) — `joe biden` wagered his campaign and now his presidency on the premise that …                                                 |
+| 1      | … . among independents , the downdraft hit 26 points . as `joe biden` might say , “ gee , what happened ? ” if …                                  |
+| 1      | … how bad are things for `joe biden` ? so bad that even the new york times is getting …                                                           |
+| 1      | … washington ( ap ) — for president `joe biden` and the senators laboring over a nearly $ 1 trillion infrastructure …                             |
+| 1      | … ( cnn ) president `joe biden` is tired of wearing a mask . …                                                                                    |
+| 1      | … ( cnn ) want to see president `joe biden` in person ? consider a move to pennsylvania . …                                                       |
 
 ### More complex patterns
 
 ## Odds
 
 ### Visualizing dependencies
+
+``` r
+sentence <- "The green giant wishes for Jackie-boy only good things"
+sent_depend <- udpipe::udpipe(udmodel, x = sentence)
+
+plot_annotation <- function(x, size = 3){
+  
+  x <- x[!is.na(x$head_token_id), ]
+  x <- x[x$sentence_id %in% min(x$sentence_id), ]
+  edges <- x[x$head_token_id != 0, c("token_id", 
+                                     "head_token_id", 
+                                     "dep_rel")]
+  edges$label <- edges$dep_rel
+  
+  g <- igraph::graph_from_data_frame(edges,
+                                     vertices = x[, c("token_id",
+                                                      "token",
+                                                      "lemma",
+                                                      "upos",
+                                                      "xpos",
+                                                      "feats")],
+                                     directed = TRUE)
+  
+  ggraph::ggraph(g, layout = "linear") +
+    ggraph::geom_edge_arc(ggplot2::aes(label = dep_rel, vjust = -0.20),
+                          arrow = grid::arrow(length = unit(4, 'mm'), 
+                                              ends = "last", 
+                                              type = "closed"),
+                          end_cap = ggraph::label_rect("w123"),
+                          label_colour = "#55752f", 
+                          check_overlap = TRUE, 
+                          label_size = size) +
+    
+    ggraph::geom_node_label(ggplot2::aes(label = token), 
+                            col = "steelblue", 
+                            size = size, 
+                            fontface = "bold") +
+    
+    ggraph::geom_node_text(ggplot2::aes(label = upos), 
+                           nudge_y = -0.35, 
+                           size = size) +
+    
+    ggraph::theme_graph() 
+}
+
+
+plot_annotation(sent_depend, size = 4) +
+  labs(title = sentence)
+```
+
+![](README_files/figure-markdown_github/unnamed-chunk-14-1.png)
