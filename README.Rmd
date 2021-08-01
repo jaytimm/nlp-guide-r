@@ -8,8 +8,7 @@ output:
 
 
 
-A summary of some R-based, NLP workflows.  I principally use the `udpipe` (!) package for working with text data.  It is a beast, and it keeps things simple from a data class perspective (ie, data frames only).
-
+A summary of some R-based, NLP workflows -- mostly using `udpipe`.
 
 ---
 
@@ -35,35 +34,40 @@ library(tidyverse)
 meta <- quicknews::qnews_get_newsmeta('joe biden')
 news <- quicknews::qnews_extract_article(url = meta$link[1:20],
                                          cores = 7)
+
+strwrap(news$text[10], width = 60)[1:5]
 ```
 
 
 
 ### PubMed abstracts
 
-```{r eval=FALSE}
+```{r}
 s0 <- PubmedMTK::pmtk_search_pubmed(search_term = 'medical marijuana', 
                                     fields = c('TIAB','MH'))
 
-s1 <- PubmedMTK::pmtk_get_records2(pmids = s0$pmid, 
+s1 <- PubmedMTK::pmtk_get_records2(pmids = s0$pmid[1:10], 
                                    cores = 3 #, 
                                    #ncbi_key = key
                                    )
+
+strwrap(s1[[1]]$abstract, width = 60)[1:10]
 ```
 
 
 ### Tweets
 
-```{r eval=FALSE}
-congress_tweets <- rtweet::get_timeline( 
-  house_meta$twitter, 
-  n = 2000,
-  check=FALSE) %>%
-  mutate(created_at = as.Date(gsub(' .*$', '', created_at))) %>%
-  filter(is_quote == 'FALSE' & 
-           is_retweet == 'FALSE' & 
-           created_at > '2019-01-02' &
-           display_text_width > 0)
+```{r}
+tsearch <- rtweet::search_tweets(q = '#Jan6',
+                                 n = 100,
+                                 type = "recent",
+                                 include_rts = FALSE,
+                                 geocode = NULL,
+                                 max_id = NULL,
+                                 parse = TRUE,
+                                 token = NULL)
+
+strwrap(tsearch$text[1], width = 60)
 ```
 
 
@@ -122,7 +126,7 @@ udmodel <- udpipe::udpipe_load_model('english-ewt-ud-2.3-181115.udpipe')
 
 x0 <- udpipe::udpipe(object = udmodel,
                      x = a1,
-                     tagger = 'default', #'none'
+                     tagger = 'default', 
                      parser = 'none')
 ```
 
@@ -197,14 +201,60 @@ x0 %>%
   knitr::kable()
 ```
 
+### Annotation to DTM
 
-### Dictionary-based entity recognition 
+Normalizing to lemma --
+
+```{r eval=FALSE, include=FALSE}
+x1 <- x0 %>%
+  filter(!is.na(newness)) %>%
+  mutate(newness = ifelse(grepl('_', newness), newness, lemma)) 
+
+x2 <- x1 %>%
+  count(doc_id, newness)
+
+dtm <- tidytext::cast_sparse(data = x2,
+                             row = doc_id,
+                             column = newness,
+                             value = n)
+str(dtm)
+```
+
 
 ### Rebuilding text
+
+```{r eval=FALSE, include=FALSE}
+new_text <- data.table::setDT(x1)[, list(text = paste(newness, collapse = " ")), 
+                                  by = doc_id]
+
+strwrap(new_text$text[1], width = 60)[1:10]
+```
 
 
 
 ## doc2vec
+
+```{r eval=FALSE, include=FALSE}
+new_text$nwords <- tokenizers::count_words(new_text$text)
+new_text0 <- subset(new_text, nwords < 1000 & nchar(text) > 0)
+
+set.seed(9)
+model.d2v <- doc2vec::paragraph2vec(x = new_text0, 
+                                    type = "PV-DM", 
+                                    dim = 100, 
+                                    iter = 20,
+                                    min_count = 5, 
+                                    lr = 0.05, 
+                                    threads = 1)
+
+embedding.words <- as.matrix(model.d2v, which = "words")
+embedding.docs <- as.matrix(model.d2v,   which = "docs")
+
+both <- do.call(rbind, list(embedding.docs, ebw))
+```
+
+
+
 
 ## Search
 
@@ -221,12 +271,6 @@ egs %>% head() %>% knitr::kable()
 ```
 
 
-### Highlight 
-
-```{r}
-egs$kwic <- paste0('... ', egs$lhs, ' `', egs$instance, '` ', egs$rhs, ' ...')
-knitr::kable(egs[1:8, c(1,5)])
-```
 
 
 ### More complex patterns
