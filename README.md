@@ -42,11 +42,11 @@ news <- quicknews::qnews_extract_article(url = meta$link[1:20],
 strwrap(news$text[10], width = 60)[1:5]
 ```
 
-    ## [1] "Joe Biden won by promising less. Vocal factions in the"     
-    ## [2] "Democratic Party and beyond saw Hillary Clinton’s 2016"     
-    ## [3] "defeat as evidence that Americans were hungry for something"
-    ## [4] "bold and transformative from the left. But the former"      
-    ## [5] "vice-president made a more modest bet in 2020: that people"
+    ## [1] "(CNN)Want to see President Joe Biden in person? Consider a"
+    ## [2] "move to Pennsylvania."                                     
+    ## [3] NA                                                          
+    ## [4] NA                                                          
+    ## [5] NA
 
 ### PubMed abstracts
 
@@ -92,10 +92,8 @@ tsearch <- rtweet::search_tweets(q = '#Jan6',
 strwrap(tsearch$text[1], width = 60)
 ```
 
-    ## [1] "@patriottakes Have the @FBI @DHSgov @SecretService been"   
-    ## [2] "monitoring these people? This would appear to be something"
-    ## [3] "to take seriously and activity investigate. Given what"    
-    ## [4] "happened on #Jan6 and all."
+    ## [1] "@SpeakerPelosi and @RepMaxineWaters please encourage the"
+    ## [2] "subpoena of TFG and all his cronies about #Jan6"
 
 Processing
 ----------
@@ -124,7 +122,13 @@ a1 <- corpus::text_tokens(news$text,
   )
 
 names(a1) <- 1:nrow(news)
+a1[[1]][1:20]
 ```
+
+    ##  [1] "("          "cnn"        ")"          "with"       "votes"     
+    ##  [6] "in"         "the"        "senate"     "to"         "advance"   
+    ## [11] "his"        "bipartisan" "compromise" "last"       "week"      
+    ## [16] ","          "president"  "joe"        "biden"      "took"
 
 ### Sentence tokenization
 
@@ -208,14 +212,14 @@ collocations0 %>%
   knitr::kable()
 ```
 
-| keyword                     |  freq|     pmi|
-|:----------------------------|-----:|-------:|
-| more than                   |     8|   6.788|
-| the most powerful man       |     3|  11.339|
-| powerful man in             |     3|   5.838|
-| state and local governments |     5|  10.661|
-| earlier this year           |     3|   9.282|
-| direction of                |     3|   5.045|
+| keyword               |  freq|     pmi|
+|:----------------------|-----:|-------:|
+| so far                |     3|   8.413|
+| economic recovery     |     3|  11.220|
+| american rescue       |     3|   9.220|
+| their own             |    11|   7.380|
+| the most powerful man |     3|  11.216|
+| in loudon             |     3|   5.040|
 
 ### Noun phrases
 
@@ -243,13 +247,13 @@ nps1 %>%
   knitr::kable()
 ```
 
-| keyword                                    | pattern |  ngram|    n|
-|:-------------------------------------------|:--------|------:|----:|
-| county\_council                            | NN      |      2|    1|
-| own\_reticence\_toward\_filibuster\_reform | ANPNN   |      5|    1|
-| rental\_assistance\_funding                | ANN     |      3|    1|
-| fool’s\_errand                             | NN      |      2|    1|
-| new\_home                                  | AN      |      2|    1|
+| keyword                        | pattern |  ngram|    n|
+|:-------------------------------|:--------|------:|----:|
+| imminent\_ending\_of\_the\_cdc | ANPDN   |      5|    1|
+| new\_castle\_county\_council   | ANNN    |      4|    1|
+| pro-crime\_voters              | AN      |      2|    1|
+| oval\_office\_rosters          | ANN     |      3|    1|
+| direct\_contact\_with\_biden   | ANPN    |      4|    1|
 
 ### Tokenizing multi-word expressions
 
@@ -265,27 +269,90 @@ x0$newness <- udpipe::txt_recode_ngram(tolower(x0$token),
 
 x0 %>%
   select(doc_id, token:xpos, newness) %>%
+  filter(grepl('_', newness)) %>%
   head() %>%
   knitr::kable()
 ```
 
-| doc\_id | token | lemma | upos  | xpos  | newness |
-|:--------|:------|:------|:------|:------|:--------|
-| 1       | (     | (     | PUNCT | -LRB- | (       |
-| 1       | cnn   | cnn   | VERB  | VB    | cnn     |
-| 1       | )     | )     | PUNCT | -RRB- | )       |
-| 1       | with  | with  | ADP   | IN    | with    |
-| 1       | votes | vote  | NOUN  | NNS   | votes   |
-| 1       | in    | in    | ADP   | IN    | in      |
+| doc\_id | token      | lemma      | upos | xpos | newness                            |
+|:--------|:-----------|:-----------|:-----|:-----|:-----------------------------------|
+| 1       | bipartisan | bipartisan | ADJ  | JJ   | bipartisan\_compromise\_last\_week |
+| 1       | president  | president  | NOUN | NN   | president\_joe\_biden              |
+| 1       | big        | big        | ADJ  | JJ   | big\_step\_toward\_upgrading       |
+| 2       | ambitious  | ambitious  | ADJ  | JJ   | ambitious\_influencers             |
+| 2       | shadow     | shadow     | NOUN | NN   | shadow\_cabinet                    |
+| 2       | new        | new        | ADJ  | JJ   | new\_new\_deal                     |
 
 ### Annotation to DTM
 
 Normalizing to lemma –
 
+``` r
+x1 <- x0 %>%
+  filter(!is.na(newness)) %>%
+  mutate(newness = ifelse(grepl('_', newness), newness, lemma)) 
+
+x2 <- x1 %>%
+  count(doc_id, newness)
+
+dtm <- tidytext::cast_sparse(data = x2,
+                             row = doc_id,
+                             column = newness,
+                             value = n)
+str(dtm)
+```
+
+    ## Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+    ##   ..@ i       : int [1:5093] 0 2 3 4 5 6 8 9 10 11 ...
+    ##   ..@ p       : int [1:2981] 0 17 37 53 69 87 94 97 98 99 ...
+    ##   ..@ Dim     : int [1:2] 20 2980
+    ##   ..@ Dimnames:List of 2
+    ##   .. ..$ : chr [1:20] "1" "10" "11" "12" ...
+    ##   .. ..$ : chr [1:2980] "," "." "(" ")" ...
+    ##   ..@ x       : num [1:5093] 1 55 5 5 1 42 72 39 44 131 ...
+    ##   ..@ factors : list()
+
 ### Rebuilding text
+
+``` r
+new_text <- data.table::setDT(x1)[, list(text = paste(newness, collapse = " ")), 
+                                  by = doc_id]
+
+strwrap(new_text$text[1], width = 60)[1:10]
+```
+
+    ##  [1] "( cnn ) with vote in the senate to advance he"             
+    ##  [2] "bipartisan_compromise_last_week , president_joe_biden take"
+    ##  [3] "a big_step_toward_upgrading america' infrastructure ."     
+    ##  [4] NA                                                          
+    ##  [5] NA                                                          
+    ##  [6] NA                                                          
+    ##  [7] NA                                                          
+    ##  [8] NA                                                          
+    ##  [9] NA                                                          
+    ## [10] NA
 
 doc2vec
 -------
+
+``` r
+new_text$nwords <- tokenizers::count_words(new_text$text)
+new_text0 <- subset(new_text, nwords < 1000 & nchar(text) > 0)
+
+set.seed(9)
+model.d2v <- doc2vec::paragraph2vec(x = new_text0, 
+                                    type = "PV-DM", 
+                                    dim = 100, 
+                                    iter = 20,
+                                    min_count = 5, 
+                                    lr = 0.05, 
+                                    threads = 1)
+
+embedding.words <- as.matrix(model.d2v, which = "words")
+embedding.docs <- as.matrix(model.d2v,   which = "docs")
+
+both <- do.call(rbind, list(embedding.docs, embedding.words))
+```
 
 Search
 ------

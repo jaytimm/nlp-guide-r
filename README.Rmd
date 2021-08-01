@@ -99,6 +99,7 @@ a1 <- corpus::text_tokens(news$text,
   )
 
 names(a1) <- 1:nrow(news)
+a1[[1]][1:20]
 ```
 
 
@@ -197,15 +198,18 @@ x0$newness <- udpipe::txt_recode_ngram(tolower(x0$token),
 
 x0 %>%
   select(doc_id, token:xpos, newness) %>%
+  filter(grepl('_', newness)) %>%
   head() %>%
   knitr::kable()
 ```
+
+
 
 ### Annotation to DTM
 
 Normalizing to lemma --
 
-```{r eval=FALSE, include=FALSE}
+```{r}
 x1 <- x0 %>%
   filter(!is.na(newness)) %>%
   mutate(newness = ifelse(grepl('_', newness), newness, lemma)) 
@@ -223,7 +227,7 @@ str(dtm)
 
 ### Rebuilding text
 
-```{r eval=FALSE, include=FALSE}
+```{r}
 new_text <- data.table::setDT(x1)[, list(text = paste(newness, collapse = " ")), 
                                   by = doc_id]
 
@@ -234,7 +238,7 @@ strwrap(new_text$text[1], width = 60)[1:10]
 
 ## doc2vec
 
-```{r eval=FALSE, include=FALSE}
+```{r}
 new_text$nwords <- tokenizers::count_words(new_text$text)
 new_text0 <- subset(new_text, nwords < 1000 & nchar(text) > 0)
 
@@ -250,7 +254,7 @@ model.d2v <- doc2vec::paragraph2vec(x = new_text0,
 embedding.words <- as.matrix(model.d2v, which = "words")
 embedding.docs <- as.matrix(model.d2v,   which = "docs")
 
-both <- do.call(rbind, list(embedding.docs, ebw))
+both <- do.call(rbind, list(embedding.docs, embedding.words))
 ```
 
 
