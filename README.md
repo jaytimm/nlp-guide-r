@@ -44,11 +44,11 @@ news <- quicknews::qnews_extract_article(url = meta$link[1:20],
 strwrap(news$text[10], width = 60)[1:5]
 ```
 
-    ## [1] "August 8, 2021 - President Joe Biden proclaims the week of" 
-    ## [2] "August 8 through August 14, 2021, as National Health Center"
-    ## [3] "Week.   In 1965, our Nation launched its first community"   
-    ## [4] "health centers to improve the lives and well-being of"      
-    ## [5] "Americans regardless of their ability to pay.  These health"
+    ## [1] "WASHINGTON (AP) — Despite a rocky week of fits and starts," 
+    ## [2] "President Joe Biden on Friday praised the Senate for edging"
+    ## [3] "the bipartisan infrastructure plan closer to passage, ahead"
+    ## [4] "of a key vote on the $1 trillion package. As Biden spoke"   
+    ## [5] "from the White House, he compared the “historic investment”"
 
 ### PubMed abstracts
 
@@ -94,13 +94,11 @@ tsearch <- rtweet::search_tweets(q = '#Jan6',
 strwrap(tsearch$text[1], width = 60)
 ```
 
-    ## [1] "@DOJ @CIA @FBI @ My uncle's died in #WWII fighting"      
-    ## [2] "#fascism. #RupertMurdoch, as owner of #FauxNews should"  
-    ## [3] "loose broadcasting licence &amp; be subpoenaed as his"   
-    ## [4] "agency &amp; staff publicly promote ongoing overthrow of"
-    ## [5] "our democracy #Jan6 #insurrection."                      
-    ## [6] ""                                                        
-    ## [7] "https://t.co/Pfoaa7BLbI"
+    ## [1] "@SeditionHunters Ugh. 1. This is the direct result of #DOJ"
+    ## [2] "and judges not taking insurrectionists seriously and"      
+    ## [3] "locking them up until trial to secure public safety. Weak" 
+    ## [4] "release permissions continue to be the theme of #Jan6"     
+    ## [5] "cases."
 
 Processing
 ----------
@@ -116,8 +114,8 @@ sentences %>% head() %>% knitr::kable()
 
 <table>
 <colgroup>
-<col style="width: 4%" />
-<col style="width: 96%" />
+<col style="width: 2%" />
+<col style="width: 97%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -128,27 +126,27 @@ sentences %>% head() %>% knitr::kable()
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">1.1</td>
-<td style="text-align: left;">Joe Biden declared his third candidacy for president on 25 April 2019 in a three-and-a-half minute video.</td>
+<td style="text-align: left;">Nine months after the election he comprehensively lost, the spectre of Donald Trump – darkly menacing, subversive and apparently immune from prosecution – continues to cast a shadow over US democracy and America’s global standing, distorting policy and poisoning political life.</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">1.2</td>
-<td style="text-align: left;">The format was new, but for Biden relied on an old-fashioned conception of masculinity.</td>
+<td style="text-align: left;">How can this be?</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">1.3</td>
-<td style="text-align: left;">He talked about the 12 August 2017 neo-Nazi rally in Charlottesville, Virginia, about which Donald Trump (in)famously said there were “very fine people on both sides”.</td>
+<td style="text-align: left;">Why is this horror movie still running?</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">1.4</td>
-<td style="text-align: left;">The incident provided Biden with a good vs evil story frame, which he entered as a sort of superhero.</td>
+<td style="text-align: left;">Trumpism, like other fascist variants, is a disease, a blight – a noxious far-right populist-nationalist miasma that taints and rots all it touches.</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">1.5</td>
-<td style="text-align: left;">“At that moment,” Biden intoned, as viewers saw white supremacists marching with torches, “I knew the threat to this nation was unlike any I had seen in my lifetime.”</td>
+<td style="text-align: left;">Older Europeans share a folk memory of fascism.</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">1.6</td>
-<td style="text-align: left;">I wrote at the time that we’re in the battle for the soul of this nation.</td>
+<td style="text-align: left;">But too many Americans just don’t get it.</td>
 </tr>
 </tbody>
 </table>
@@ -161,7 +159,7 @@ The order here is wrong; we want to identify sentences, then tokenize –
 a1 <- corpus::text_tokens(sentences$text,
                           
   filter = corpus::text_filter(
-    map_case = TRUE, 
+    map_case = FALSE, 
     map_quote = TRUE,
     remove_ignorable = TRUE,
     combine = c(corpus::abbreviations_en),
@@ -182,11 +180,18 @@ names(a1) <-sentences$doc_id
 a1[[1]]
 ```
 
-    ##  [1] "joe"              "biden"            "declared"         "his"             
-    ##  [5] "third"            "candidacy"        "for"              "president"       
-    ##  [9] "on"               "25"               "april"            "2019"            
-    ## [13] "in"               "a"                "three-and-a-half" "minute"          
-    ## [17] "video"            "."
+    ##  [1] "Nine"            "months"          "after"           "the"            
+    ##  [5] "election"        "he"              "comprehensively" "lost"           
+    ##  [9] ","               "the"             "spectre"         "of"             
+    ## [13] "Donald"          "Trump"           "–"               "darkly"         
+    ## [17] "menacing"        ","               "subversive"      "and"            
+    ## [21] "apparently"      "immune"          "from"            "prosecution"    
+    ## [25] "–"               "continues"       "to"              "cast"           
+    ## [29] "a"               "shadow"          "over"            "US"             
+    ## [33] "democracy"       "and"             "America's"       "global"         
+    ## [37] "standing"        ","               "distorting"      "policy"         
+    ## [41] "and"             "poisoning"       "political"       "life"           
+    ## [45] "."
 
 ### Tokens to data frame
 
@@ -195,69 +200,70 @@ a2 <- PubmedMTK::pmtk_cast_tokens(a1)
 a2 %>%  slice(1:10)
 ```
 
-    ##     doc_id token_id     token
-    ##  1:    1.1        1       joe
-    ##  2:    1.1        2     biden
-    ##  3:    1.1        3  declared
-    ##  4:    1.1        4       his
-    ##  5:    1.1        5     third
-    ##  6:    1.1        6 candidacy
-    ##  7:    1.1        7       for
-    ##  8:    1.1        8 president
-    ##  9:    1.1        9        on
-    ## 10:    1.1       10        25
-
-``` r
-a4 <- a2 %>%
-  separate(doc_id, 
-           into = c('doc_id', 'sentence_id'), 
-           sep = '[.]')
-```
+    ##     doc_id sentence_id token_id           token
+    ##  1:      1           1        1            Nine
+    ##  2:      1           1        2          months
+    ##  3:      1           1        3           after
+    ##  4:      1           1        4             the
+    ##  5:      1           1        5        election
+    ##  6:      1           1        6              he
+    ##  7:      1           1        7 comprehensively
+    ##  8:      1           1        8            lost
+    ##  9:      1           1        9               ,
+    ## 10:      1           1       10             the
 
 ### Sentences containing X
 
 ``` r
-jrb_sentences <- a2[, if(any(token == 'biden')) .SD, by = list(doc_id)]
-jrb_sentences0 <- jrb_sentences[, list(text = paste(token, collapse = " ")), by = doc_id]
+jrb_sentences <- a2[, if(any(token == 'Biden')) .SD, by = list(doc_id,sentence_id)]
+jrb_sentences0 <- jrb_sentences[, list(text = paste(token, collapse = " ")), by = list(doc_id,sentence_id)]
 
 jrb_sentences0 %>% head() %>% knitr::kable()
 ```
 
 <table>
 <colgroup>
-<col style="width: 3%" />
-<col style="width: 96%" />
+<col style="width: 2%" />
+<col style="width: 4%" />
+<col style="width: 93%" />
 </colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">doc_id</th>
+<th style="text-align: left;">sentence_id</th>
 <th style="text-align: left;">text</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">1.1</td>
-<td style="text-align: left;">joe biden declared his third candidacy for president on 25 april 2019 in a three-and-a-half minute video .</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">8</td>
+<td style="text-align: left;">By refusing to confront his crooked predecessor and bring him to justice , Joe Biden feeds delusional Trump’s sense of godlike impunity , and the dread prospect of a blasphemous second coming .</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">1.2</td>
-<td style="text-align: left;">the format was new , but for biden relied on an old-fashioned conception of masculinity .</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">12</td>
+<td style="text-align: left;">Maybe Biden lacks the killer instinct .</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">1.4</td>
-<td style="text-align: left;">the incident provided biden with a good vs evil story frame , which he entered as a sort of superhero .</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">36</td>
+<td style="text-align: left;">Asked what he would do about Trump’s crimes , Biden said last August that to pursue his predecessor in court would be “ very unusual ” .</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">1.5</td>
-<td style="text-align: left;">“ at that moment , ” biden intoned , as viewers saw white supremacists marching with torches , “ i knew the threat to this nation was unlike any i had seen in my lifetime . ”</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">46</td>
+<td style="text-align: left;">But still Biden and Garland sit on their hands .</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">1.14</td>
-<td style="text-align: left;">the charlottesville setting , adjacent to thomas jefferson’s home , monticello , supplied biden with a pretext to quote the declaration of independence .</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">60</td>
+<td style="text-align: left;">Biden struggles daily with the toxic fallout .</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">1.16</td>
-<td style="text-align: left;">the “ battle for the soul of america ” narrative frame served biden well .</td>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">( AP ) — After more than six months of work combating the coronavirus , negotiating a bipartisan infrastructure bill and repairing the U.S. image abroad , President Joe Biden should be heading out on vacation and a traditional August break from Washington .</td>
 </tr>
 </tbody>
 </table>
@@ -269,12 +275,23 @@ setwd(paste0(udmodel_dir, 'model'))
 udmodel <- udpipe::udpipe_load_model('english-ewt-ud-2.3-181115.udpipe')
 ```
 
-Collapse token list by doc\_id
+> Annotators can sometimes prove challenging because they provide little
+> control over how words and sentences are defined. As we have already
+> identified sentences and tokenized our corpus, ideally we want to
+> preserves that structure. The `udpipe` package will annotate token
+> objects; however, sentence details are not captured. Below we add a
+> newline () to the end of every sentence in the corpus, and aggregate
+> the sentence-level tokens to document-level. This minor hack works,
+> and the resulting annotation contains the same number of rows as the
+> df generated by `pmtk_cast_tokens`.
 
 ``` r
-names(a1) <- gsub('\\..*$', '', names(a1))
-a3 <- sapply(unique(names(a1)), 
-             function(x) unname(unlist(a1[names(a1)==x])), 
+## a possible function -- 
+a01 <- lapply(a1, c, '\n')
+names(a01) <- gsub('\\..*$', '', names(a1))
+
+a3 <- sapply(unique(names(a01)), 
+             function(x) unname(unlist(a01[names(a01) == x])), 
              simplify=FALSE)
 ```
 
@@ -282,7 +299,7 @@ a3 <- sapply(unique(names(a1)),
 x0 <- udpipe::udpipe(object = udmodel,
                      x = a3,
                      tagger = 'default', 
-                     parser = 'none')
+                     parser = 'default')
 
 colnames(x0)
 ```
@@ -294,8 +311,20 @@ colnames(x0)
     ## [17] "misc"
 
 ``` r
-x1 <- cbind(a4, x0[, c(10:16)])
+x0 %>%
+  select(doc_id, sentence_id, token_id:xpos) %>%
+  head() %>%
+  knitr::kable()
 ```
+
+| doc\_id |  sentence\_id| token\_id | token    | lemma    | upos | xpos |
+|:--------|-------------:|:----------|:---------|:---------|:-----|:-----|
+| 1       |             1| 1         | Nine     | nine     | NUM  | CD   |
+| 1       |             1| 2         | months   | month    | NOUN | NNS  |
+| 1       |             1| 3         | after    | after    | ADP  | IN   |
+| 1       |             1| 4         | the      | the      | DET  | DT   |
+| 1       |             1| 5         | election | election | NOUN | NN   |
+| 1       |             1| 6         | he       | he       | PRON | PRP  |
 
 Multi-word expressions
 ----------------------
@@ -319,14 +348,14 @@ collocations0 %>%
   knitr::kable()
 ```
 
-| keyword       |  freq|    pmi|
-|:--------------|-----:|------:|
-| this week     |     3|  5.475|
-| at the center |     3|  7.119|
-| rather than   |     4|  9.329|
-| the bay of    |     4|  5.468|
-| tell you      |     3|  7.796|
-| have been     |    11|  6.387|
+| keyword                   |  freq|    pmi|
+|:--------------------------|-----:|------:|
+| of Pigs                   |     4|  5.589|
+| bipartisan infrastructure |     7|  7.300|
+| the public works package  |     3|  9.507|
+| President Joe             |    13|  8.283|
+| may be                    |     3|  6.588|
+| of the United             |     6|  7.149|
 
 ### Noun phrases
 
@@ -354,13 +383,13 @@ nps1 %>%
   knitr::kable()
 ```
 
-| keyword                             | pattern |  ngram|    n|
-|:------------------------------------|:--------|------:|----:|
-| other\_democrats                    | AN      |      2|    2|
-| gas\_tax                            | NN      |      2|    1|
-| federal\_elections                  | AN      |      2|    1|
-| house\_covid-19                     | NN      |      2|    1|
-| congressional\_budget\_office\_drew | ANNN    |      4|    1|
+| keyword                     | pattern |  ngram|    n|
+|:----------------------------|:--------|------:|----:|
+| JOSEPH\_R.\_BIDEN\_JR       | NNNN    |      4|    1|
+| political\_risk             | AN      |      2|    1|
+| 5\_%\_in\_carbon\_dioxide   | ANPNN   |      5|    1|
+| wide-open\_southern\_border | AAN     |      3|    1|
+| critical\_race\_theory      | ANN     |      3|    1|
 
 ### Tokenizing multi-word expressions
 
@@ -369,33 +398,33 @@ nps1 %>%
 # data.table::setDT(lex)
 # ms <- subset(lex, lex$ngram > 1)
 
-x1$newness <- udpipe::txt_recode_ngram(tolower(x1$token),
+x0$newness <- udpipe::txt_recode_ngram(tolower(x0$token),
                                        compound = c(nps1$keyword),
                                        ngram = c(nps1$ngram),
                                        sep = '_')
 
-x1 %>%
+x0 %>%
   select(doc_id, token:xpos, newness) %>%
   filter(grepl('_', newness)) %>%
   head() %>%
   knitr::kable()
 ```
 
-| doc\_id | token            | lemma            | upos | xpos | newness                                    |
-|:--------|:-----------------|:-----------------|:-----|:-----|:-------------------------------------------|
-| 1       | joe              | joe              | NOUN | NN   | joe\_biden                                 |
-| 1       | third            | third            | ADJ  | JJ   | third\_candidacy\_for\_president           |
-| 1       | three-and-a-half | three-and-a-half | NOUN | NN   | three-and-a-half\_minute\_video            |
-| 1       | old-fashioned    | old-fashioned    | ADJ  | JJ   | old-fashioned\_conception\_of\_masculinity |
-| 1       | 12               | 12               | NUM  | CD   | 12\_august                                 |
-| 1       | donald           | donald           | AUX  | MD   | donald\_trump                              |
+| doc\_id | token     | lemma     | upos | xpos | newness                                          |
+|:--------|:----------|:----------|:-----|:-----|:-------------------------------------------------|
+| 1       | darkly    | darkly    | ADJ  | JJ   | darkly\_menacing                                 |
+| 1       | global    | global    | ADJ  | JJ   | global\_standing                                 |
+| 1       | political | political | ADJ  | JJ   | political\_life                                  |
+| 1       | horror    | horror    | NOUN | NN   | horror\_movie                                    |
+| 1       | other     | other     | ADJ  | JJ   | other\_fascist\_variants                         |
+| 1       | noxious   | noxious   | ADJ  | JJ   | noxious\_far-right\_populist-nationalist\_miasma |
 
 ### Annotation to DTM
 
 Normalizing to lemma –
 
 ``` r
-x2 <- x1 %>%
+x2 <- x0 %>%
   filter(!is.na(newness)) %>%
   mutate(newness = ifelse(grepl('_', newness), newness, lemma)) 
 
@@ -410,13 +439,13 @@ str(dtm)
 ```
 
     ## Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-    ##   ..@ i       : int [1:5772] 0 1 3 4 6 7 8 9 10 11 ...
-    ##   ..@ p       : int [1:3328] 0 16 33 41 60 75 88 101 103 105 ...
-    ##   ..@ Dim     : int [1:2] 19 3327
+    ##   ..@ i       : int [1:5484] 0 1 3 4 6 8 9 10 11 15 ...
+    ##   ..@ p       : int [1:3133] 0 14 32 41 44 51 71 84 101 118 ...
+    ##   ..@ Dim     : int [1:2] 20 3132
     ##   ..@ Dimnames:List of 2
-    ##   .. ..$ : chr [1:19] "1" "10" "11" "12" ...
-    ##   .. ..$ : chr [1:3327] "-" "," ":" "." ...
-    ##   ..@ x       : num [1:5772] 5 4 18 2 1 2 4 2 14 8 ...
+    ##   .. ..$ : chr [1:20] "1" "10" "11" "12" ...
+    ##   .. ..$ : chr [1:3132] "-" "," ":" "!" ...
+    ##   ..@ x       : num [1:5484] 12 5 1 18 4 2 1 4 6 6 ...
     ##   ..@ factors : list()
 
 ### Rebuilding text
@@ -428,16 +457,16 @@ new_text <- data.table::setDT(x2)[, list(text = paste(newness, collapse = " ")),
 strwrap(new_text$text[5], width = 60)[1:10]
 ```
 
-    ##  [1] "the eviction_moratorium_crisis may have come and go -"      
-    ##  [2] "though likely not for long - but it illustrate a"           
-    ##  [3] "crucial_lesson_in_leadership that joe_biden to learn , and" 
-    ##  [4] "soon . in a free_society , the people at the top owe it to" 
-    ##  [5] "the public to admit when they make a mistake . after that ,"
-    ##  [6] "they must learn from those mistake , even if that mean"     
-    ##  [7] "assume considerable_political_risk . to understand why this"
-    ##  [8] "principle be so important , let' look back at the brief but"
-    ##  [9] "memorable_presidency_of_john_f. kennedy . upon take office" 
-    ## [10] ", kennedy inherit a plan that have be hatch under he"
+    ##  [1] "( CNN ) Joe Biden's presidential_honeymoon have officially" 
+    ##  [2] "end , with a series of problem - - lead by the"             
+    ##  [3] "ongoing_surge of the delta variant of the coronavirus - -"  
+    ##  [4] "coalescing to make the last_few_days some of the worst_ones"
+    ##  [5] "he have spend as president . the point - - now on youtube !"
+    ##  [6] "in each episode of he weekly YouTube show , Chris Cillizza" 
+    ##  [7] "will delve a little_deeper into the"                        
+    ##  [8] "surreal_world_of_politics . click to subscribe !"           
+    ##  [9] NA                                                           
+    ## [10] NA
 
 doc2vec
 -------
@@ -467,17 +496,17 @@ predict(model.d2v, 'biden',
         which = "word2word")[[1]]
 ```
 
-    ##    term1      term2 similarity rank
-    ## 1  biden     resign  0.9602762    1
-    ## 2  biden         he  0.9547604    2
-    ## 3  biden      thing  0.9440539    3
-    ## 4  biden      speak  0.9431004    4
-    ## 5  biden     should  0.9348323    5
-    ## 6  biden  statement  0.9331188    6
-    ## 7  biden physically  0.9302188    7
-    ## 8  biden      march  0.9232423    8
-    ## 9  biden    believe  0.9099379    9
-    ## 10 biden        ask  0.9068149   10
+    ##    term1            term2    similarity rank
+    ## 1  biden     \x80;w\0315V  8.653837e-23    1
+    ## 2  biden     \xa0\x9dN)5V -8.772684e-12    2
+    ## 3  biden                  -1.648323e-21    3
+    ## 4  biden    \xa0E\b\0325V -4.877097e+29    4
+    ## 5  biden  k!+\xad\xbd\177 -1.164224e-11    5
+    ## 6  biden \xfd\xff\xff\xff  1.401298e-45    6
+    ## 7  biden                   8.943354e-24    7
+    ## 8  biden                $ -8.589728e-12    8
+    ## 9  biden     X\xb1\xdc%5V  2.690141e-20    9
+    ## 10 biden  \003\xabj\0305V  1.401298e-45   10
 
 Search
 ------
@@ -486,69 +515,64 @@ Search
 
 ``` r
 egs <- PubmedMTK::pmtk_locate_term(text = a1,
-                                   doc_id = x0$doc_id,
+                                   doc_id = names(a1),
                                    term = c('joe biden'),
                                    stem = F,
                                    window = 10)
-```
 
-    ## Warning in corpus::text_locate(x = text, terms = term, stemmer = stx): renaming
-    ## entries with duplicate names
-
-``` r
-egs %>% head() %>% knitr::kable()
+egs %>% head() %>% knitr::kable(align = c('lrcl'))
 ```
 
 <table>
 <colgroup>
-<col style="width: 4%" />
-<col style="width: 42%" />
-<col style="width: 5%" />
-<col style="width: 47%" />
+<col style="width: 3%" />
+<col style="width: 44%" />
+<col style="width: 6%" />
+<col style="width: 44%" />
 </colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">doc_id</th>
-<th style="text-align: left;">lhs</th>
-<th style="text-align: left;">instance</th>
+<th style="text-align: right;">lhs</th>
+<th style="text-align: center;">instance</th>
 <th style="text-align: left;">rhs</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: left;">joe biden</td>
-<td style="text-align: left;">declared his third candidacy for president on 25 april 2019 in</td>
+<td style="text-align: left;">1.8</td>
+<td style="text-align: right;">to confront his crooked predecessor and bring him to justice ,</td>
+<td style="text-align: center;">Joe Biden</td>
+<td style="text-align: left;">feeds delusional Trump’s sense of godlike impunity , and the dread</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">president</td>
-<td style="text-align: left;">joe biden</td>
-<td style="text-align: left;">and first lady jill biden met with members of the 2020</td>
+<td style="text-align: left;">2.2</td>
+<td style="text-align: right;">bipartisan infrastructure bill and repairing the U.S. image abroad , President</td>
+<td style="text-align: center;">Joe Biden</td>
+<td style="text-align: left;">should be heading out on vacation and a traditional August break</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">1,600 people affected by the september 11 attacks are asking president</td>
-<td style="text-align: left;">joe biden</td>
-<td style="text-align: left;">to refrain from coming to ground zero to mark the 20th</td>
+<td style="text-align: left;">3.1</td>
+<td style="text-align: right;">1,600 people affected by the September 11 attacks are asking President</td>
+<td style="text-align: center;">Joe Biden</td>
+<td style="text-align: left;">to refrain from coming to Ground Zero to mark the 20th</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">long — but it illustrated a crucial lesson in leadership that</td>
-<td style="text-align: left;">joe biden</td>
+<td style="text-align: left;">6.1</td>
+<td style="text-align: right;">long — but it illustrated a crucial lesson in leadership that</td>
+<td style="text-align: center;">Joe Biden</td>
 <td style="text-align: left;">needs to learn , and soon .</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">even though</td>
-<td style="text-align: left;">joe biden</td>
-<td style="text-align: left;">is the oldest person ever elected president — while kennedy was</td>
+<td style="text-align: left;">6.52</td>
+<td style="text-align: right;">Even though</td>
+<td style="text-align: center;">Joe Biden</td>
+<td style="text-align: left;">is the oldest person ever elected president — while Kennedy was</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">with rare exceptions ,</td>
-<td style="text-align: left;">joe biden</td>
+<td style="text-align: left;">7.2</td>
+<td style="text-align: right;">With rare exceptions ,</td>
+<td style="text-align: center;">Joe Biden</td>
 <td style="text-align: left;">throughout his presidency has stressed his determination to cooperate with the</td>
 </tr>
 </tbody>
