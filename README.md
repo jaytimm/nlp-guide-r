@@ -43,11 +43,11 @@ news <- quicknews::qnews_extract_article(url = meta$link[1:20],
 strwrap(news$text[10], width = 60)[1:5]
 ```
 
-    ## [1] "WASHINGTON (AP) — The Senate moved closer to passing a $1" 
-    ## [2] "trillion bipartisan infrastructure package Saturday after" 
-    ## [3] "lawmakers from both parties came together and voted to"    
-    ## [4] "clear a key procedural hurdle, but the action soon stalled"
-    ## [5] "out as a few Republican opponents refused to speed up"
+    ## [1] "August 8, 2021 - President Joe Biden proclaims the week of" 
+    ## [2] "August 8 through August 14, 2021, as National Health Center"
+    ## [3] "Week.   In 1965, our Nation launched its first community"   
+    ## [4] "health centers to improve the lives and well-being of"      
+    ## [5] "Americans regardless of their ability to pay.  These health"
 
 ### PubMed abstracts
 
@@ -93,20 +93,17 @@ tsearch <- rtweet::search_tweets(q = '#Jan6',
 strwrap(tsearch$text[1], width = 60)
 ```
 
-    ## [1] "@SeditionHunters Ugh. 1. This is the direct result of #DOJ"
-    ## [2] "and judges not taking insurrectionists seriously and"      
-    ## [3] "locking them up until trial to secure public safety. Weak" 
-    ## [4] "release permissions continue to be the theme of #Jan6"     
-    ## [5] "cases."
+    ## [1] "Get the call logs from Jan 2020 through noon on Jan 20,"
+    ## [2] "2021!!! WTF is this even a question!! #Jan6"            
+    ## [3] "https://t.co/DHhc7tZPVg"
 
 Processing
 ----------
 
 ### Sentence extraction
 
-> Sentence identification/extraction can be challenging. The
-> `pmtk_toke_sentences` function from the PumbedMTK package is a simple
-> wrapper to the `corpus::text_split` function.
+> The `pmtk_toke_sentences` function from the PumbedMTK package is a
+> simple wrapper to the `corpus::text_split` function.
 
 ``` r
 sentences <- PubmedMTK::pmtk_toke_sentences(text = news$text,
@@ -358,14 +355,14 @@ collocations0 %>%
   knitr::kable()
 ```
 
-| keyword                 |  freq|     pmi|
-|:------------------------|-----:|-------:|
-| feels like              |     3|  10.305|
-| Mr Biden                |     7|   6.319|
-| GOP governors           |     4|   6.799|
-| the eviction moratorium |     3|  10.955|
-| the Center for          |     3|   6.892|
-| public health           |     4|   7.273|
+| keyword         |  freq|     pmi|
+|:----------------|-----:|-------:|
+| to do the right |     4|   9.984|
+| in the world    |     4|   6.964|
+| or otherwise    |     3|   8.215|
+| United States   |    11|  10.528|
+| as well         |     6|   6.973|
+| is going        |     5|   5.616|
 
 ### Noun phrases
 
@@ -393,13 +390,13 @@ nps1 %>%
   knitr::kable()
 ```
 
-| keyword                     | pattern |  ngram|    n|
-|:----------------------------|:--------|------:|----:|
-| lady\_Michelle\_Obama       | NNN     |      3|    1|
-| free\_society               | AN      |      2|    1|
-| US\_Capitol\_on\_January    | NNPN    |      4|    1|
-| malign\_influence\_at\_work | ANPN    |      4|    1|
-| American\_Rescue\_Plan      | NNN     |      3|    1|
+| keyword                             | pattern |  ngram|    n|
+|:------------------------------------|:--------|------:|----:|
+| assembly\_plant\_in\_Pennsylvania’s | NNPN    |      4|    1|
+| presidents\_Donald                  | NN      |      2|    1|
+| one\_aide                           | AN      |      2|    1|
+| public\_support                     | AN      |      2|    1|
+| comeback\_primary\_campaign         | NAN     |      3|    1|
 
 ### Tokenizing multi-word expressions
 
@@ -451,13 +448,13 @@ str(dtm)
 ```
 
     ## Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-    ##   ..@ i       : int [1:5275] 0 1 3 4 5 9 10 11 14 15 ...
-    ##   ..@ p       : int [1:3106] 0 13 30 38 41 48 67 79 95 111 ...
-    ##   ..@ Dim     : int [1:2] 19 3105
+    ##   ..@ i       : int [1:6086] 0 1 2 4 5 6 7 9 10 11 ...
+    ##   ..@ p       : int [1:3380] 0 16 35 44 47 55 75 90 105 120 ...
+    ##   ..@ Dim     : int [1:2] 20 3379
     ##   ..@ Dimnames:List of 2
-    ##   .. ..$ : chr [1:19] "1" "10" "11" "12" ...
-    ##   .. ..$ : chr [1:3105] "-" "," ":" "!" ...
-    ##   ..@ x       : num [1:5275] 12 9 3 18 1 1 4 6 6 11 ...
+    ##   .. ..$ : chr [1:20] "1" "10" "11" "12" ...
+    ##   .. ..$ : chr [1:3379] "-" "," ":" "!" ...
+    ##   ..@ x       : num [1:6086] 12 4 3 9 18 1 2 7 1 6 ...
     ##   ..@ factors : list()
 
 ### Rebuilding text
@@ -466,19 +463,14 @@ str(dtm)
 new_text <- data.table::setDT(x2)[, list(text = paste(newness, collapse = " ")), 
                                   by = doc_id]
 
-strwrap(new_text$text[5], width = 60)[1:10]
+strwrap(new_text$text[5], width = 60)[1:5]
 ```
 
-    ##  [1] "( CNN ) Joe Biden's presidential_honeymoon have officially" 
-    ##  [2] "end , with a series of problem - - lead by the"             
-    ##  [3] "ongoing_surge of the delta variant of the coronavirus - -"  
-    ##  [4] "coalescing to make the last_few_days some of the worst_ones"
-    ##  [5] "he have spend as president . the point - - now on youtube !"
-    ##  [6] "in each episode of he weekly YouTube show , Chris Cillizza" 
-    ##  [7] "will delve a little_deeper into the"                        
-    ##  [8] "surreal_world_of_politics . click to subscribe !"           
-    ##  [9] NA                                                           
-    ## [10] NA
+    ## [1] "( CNN ) Joe Biden's presidential_honeymoon have officially" 
+    ## [2] "end , with a series of problem - - lead by the"             
+    ## [3] "ongoing_surge of the delta variant of the coronavirus - -"  
+    ## [4] "coalescing to make the last_few_days some of the worst_ones"
+    ## [5] "he have spend as president . the point - - now on youtube !"
 
 doc2vec
 -------
@@ -503,22 +495,22 @@ both <- do.call(rbind, list(embedding.docs, embedding.words))
 ```
 
 ``` r
-predict(model.d2v, 'biden', 
+predict(model.d2v, 'Biden', 
         type = "nearest",
         which = "word2word")[[1]]
 ```
 
-    ##    term1                 term2    similarity rank
-    ## 1  biden       @N\xa4\x97\xedU -6.739813e-24    1
-    ## 2  biden    \xf0\xb6=\xa4\xedU  1.558796e+16    2
-    ## 3  biden                       -1.231492e+25    3
-    ## 4  biden          @&9\x98\xedU -8.185750e+26    4
-    ## 5  biden          kQnZ\x95\177  2.026618e+16    5
-    ## 6  biden      \xfd\xff\xff\xff  1.401298e-45    6
-    ## 7  biden                       -7.168833e-25    7
-    ## 8  biden                     $  1.536147e+16    8
-    ## 9  biden          xo"\x9d\xedU -4.342468e-20    9
-    ## 10 biden \003\x8b\x9b\x96\xedU  1.401298e-45   10
+    ##    term1       term2 similarity rank
+    ## 1  Biden         yet  0.9094913    1
+    ## 2  Biden        want  0.9051867    2
+    ## 3  Biden    Governor  0.8984227    3
+    ## 4  Biden      anyone  0.8955018    4
+    ## 5  Biden    although  0.8914970    5
+    ## 6  Biden        seem  0.8857898    6
+    ## 7  Biden         I'm  0.8849170    7
+    ## 8  Biden   important  0.8815561    8
+    ## 9  Biden Machiavelli  0.8785341    9
+    ## 10 Biden     doesnot  0.8752789   10
 
 Search
 ------
@@ -532,60 +524,60 @@ egs <- PubmedMTK::pmtk_locate_term(text = a1,
                                    stem = F,
                                    window = 10)
 
-egs %>% head() %>% knitr::kable(align = c('lrcl'))
+egs %>% head() %>% knitr::kable()
 ```
 
-<table>
+<table style="width:100%;">
 <colgroup>
-<col style="width: 3%" />
-<col style="width: 44%" />
-<col style="width: 6%" />
-<col style="width: 44%" />
+<col style="width: 4%" />
+<col style="width: 45%" />
+<col style="width: 5%" />
+<col style="width: 45%" />
 </colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">doc_id</th>
-<th style="text-align: right;">lhs</th>
-<th style="text-align: center;">instance</th>
+<th style="text-align: left;">lhs</th>
+<th style="text-align: left;">instance</th>
 <th style="text-align: left;">rhs</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">1.8</td>
-<td style="text-align: right;">to confront his crooked predecessor and bring him to justice ,</td>
-<td style="text-align: center;">Joe Biden</td>
+<td style="text-align: left;">to confront his crooked predecessor and bring him to justice ,</td>
+<td style="text-align: left;">Joe Biden</td>
 <td style="text-align: left;">feeds delusional Trump’s sense of godlike impunity , and the dread</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">2.2</td>
-<td style="text-align: right;">bipartisan infrastructure bill and repairing the U.S. image abroad , President</td>
-<td style="text-align: center;">Joe Biden</td>
+<td style="text-align: left;">bipartisan infrastructure bill and repairing the U.S. image abroad , President</td>
+<td style="text-align: left;">Joe Biden</td>
 <td style="text-align: left;">should be heading out on vacation and a traditional August break</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">3.1</td>
-<td style="text-align: right;">1,600 people affected by the September 11 attacks are asking President</td>
-<td style="text-align: center;">Joe Biden</td>
+<td style="text-align: left;">1,600 people affected by the September 11 attacks are asking President</td>
+<td style="text-align: left;">Joe Biden</td>
 <td style="text-align: left;">to refrain from coming to Ground Zero to mark the 20th</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">6.2</td>
-<td style="text-align: right;">With rare exceptions ,</td>
-<td style="text-align: center;">Joe Biden</td>
-<td style="text-align: left;">throughout his presidency has stressed his determination to cooperate with the</td>
+<td style="text-align: left;">6.3</td>
+<td style="text-align: left;">The bipartisan infrastructure deal embraced by President</td>
+<td style="text-align: left;">Joe Biden</td>
+<td style="text-align: left;">and shaped by a gang of 10 senators is inching closer</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">6.96</td>
-<td style="text-align: right;">“ Will</td>
-<td style="text-align: center;">Joe Biden</td>
-<td style="text-align: left;">feel he’s in a good place for reelection when we don’t</td>
+<td style="text-align: left;">7.2</td>
+<td style="text-align: left;">With rare exceptions ,</td>
+<td style="text-align: left;">Joe Biden</td>
+<td style="text-align: left;">throughout his presidency has stressed his determination to cooperate with the</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">7.1</td>
-<td style="text-align: right;">long — but it illustrated a crucial lesson in leadership that</td>
-<td style="text-align: center;">Joe Biden</td>
-<td style="text-align: left;">needs to learn , and soon .</td>
+<td style="text-align: left;">7.96</td>
+<td style="text-align: left;">“ Will</td>
+<td style="text-align: left;">Joe Biden</td>
+<td style="text-align: left;">feel he’s in a good place for reelection when we don’t</td>
 </tr>
 </tbody>
 </table>
@@ -599,49 +591,9 @@ Odds
 sentence <- "The green giant wishes for Jackie-boy only good things"
 sent_depend <- udpipe::udpipe(udmodel, x = sentence)
 
-plot_annotation <- function(x, size = 3){
-  
-  x <- x[!is.na(x$head_token_id), ]
-  x <- x[x$sentence_id %in% min(x$sentence_id), ]
-  edges <- x[x$head_token_id != 0, c("token_id", 
-                                     "head_token_id", 
-                                     "dep_rel")]
-  edges$label <- edges$dep_rel
-  
-  g <- igraph::graph_from_data_frame(edges,
-                                     vertices = x[, c("token_id",
-                                                      "token",
-                                                      "lemma",
-                                                      "upos",
-                                                      "xpos",
-                                                      "feats")],
-                                     directed = TRUE)
-  
-  ggraph::ggraph(g, layout = "linear") +
-    ggraph::geom_edge_arc(ggplot2::aes(label = dep_rel, vjust = -0.20),
-                          arrow = grid::arrow(length = unit(4, 'mm'), 
-                                              ends = "last", 
-                                              type = "closed"),
-                          end_cap = ggraph::label_rect("w123"),
-                          label_colour = "#55752f", 
-                          check_overlap = TRUE, 
-                          label_size = size) +
-    
-    ggraph::geom_node_label(ggplot2::aes(label = token), 
-                            col = "steelblue", 
-                            size = size, 
-                            fontface = "bold") +
-    
-    ggraph::geom_node_text(ggplot2::aes(label = upos), 
-                           nudge_y = -0.35, 
-                           size = size) +
-    
-    ggraph::theme_graph() 
-}
-
-
-plot_annotation(sent_depend, size = 4) +
-  labs(title = sentence)
+textplot::textplot_dependencyparser(sent_depend, title = sentence, subtitle = NULL)
 ```
+
+    ## Loading required namespace: ggraph
 
 ![](README_files/figure-markdown_github/unnamed-chunk-22-1.png)

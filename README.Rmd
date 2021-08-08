@@ -78,7 +78,7 @@ strwrap(tsearch$text[1], width = 60)
 
 ### Sentence extraction
 
-> Sentence identification/extraction can be challenging. The `pmtk_toke_sentences` function from the PumbedMTK package is a simple wrapper to the `corpus::text_split` function.
+> The `pmtk_toke_sentences` function from the PumbedMTK package is a simple wrapper to the `corpus::text_split` function.
 
 
 ```{r}
@@ -93,7 +93,7 @@ sentences %>% head() %>% knitr::kable()
 
 ### Tokenization
 
-> Tokenization serves many purposes; perhaps most importantly, it allows the user to specify how words will be defined.  The `text_tokens` function from the `corpus` package is hands down the best available tokenizer in R.  
+> Tokenization serves many purposes; perhaps most importantly, it allows the user to specify how words will be defined.  The `text_tokens` function from the `corpus` [package](https://github.com/patperry/r-corpus) is hands down the best available tokenizer in R.  
 
 ```{r}
 a1 <- corpus::text_tokens(sentences$text,
@@ -292,7 +292,7 @@ str(dtm)
 new_text <- data.table::setDT(x2)[, list(text = paste(newness, collapse = " ")), 
                                   by = doc_id]
 
-strwrap(new_text$text[5], width = 60)[1:10]
+strwrap(new_text$text[5], width = 60)[1:5]
 ```
 
 
@@ -320,7 +320,7 @@ both <- do.call(rbind, list(embedding.docs, embedding.words))
 
 
 ```{r}
-predict(model.d2v, 'biden', 
+predict(model.d2v, 'Biden', 
         type = "nearest",
         which = "word2word")[[1]]
 ```
@@ -338,7 +338,7 @@ egs <- PubmedMTK::pmtk_locate_term(text = a1,
                                    stem = F,
                                    window = 10)
 
-egs %>% head() %>% knitr::kable(align = c('lrcl'))
+egs %>% head() %>% knitr::kable()
 ```
 
 
@@ -348,54 +348,14 @@ egs %>% head() %>% knitr::kable(align = c('lrcl'))
 
 ### Visualizing dependencies
 
-```{r}
+```{r fig.height=5}
 sentence <- "The green giant wishes for Jackie-boy only good things"
 sent_depend <- udpipe::udpipe(udmodel, x = sentence)
 
-plot_annotation <- function(x, size = 3){
-  
-  x <- x[!is.na(x$head_token_id), ]
-  x <- x[x$sentence_id %in% min(x$sentence_id), ]
-  edges <- x[x$head_token_id != 0, c("token_id", 
-                                     "head_token_id", 
-                                     "dep_rel")]
-  edges$label <- edges$dep_rel
-  
-  g <- igraph::graph_from_data_frame(edges,
-                                     vertices = x[, c("token_id",
-                                                      "token",
-                                                      "lemma",
-                                                      "upos",
-                                                      "xpos",
-                                                      "feats")],
-                                     directed = TRUE)
-  
-  ggraph::ggraph(g, layout = "linear") +
-    ggraph::geom_edge_arc(ggplot2::aes(label = dep_rel, vjust = -0.20),
-                          arrow = grid::arrow(length = unit(4, 'mm'), 
-                                              ends = "last", 
-                                              type = "closed"),
-                          end_cap = ggraph::label_rect("w123"),
-                          label_colour = "#55752f", 
-                          check_overlap = TRUE, 
-                          label_size = size) +
-    
-    ggraph::geom_node_label(ggplot2::aes(label = token), 
-                            col = "steelblue", 
-                            size = size, 
-                            fontface = "bold") +
-    
-    ggraph::geom_node_text(ggplot2::aes(label = upos), 
-                           nudge_y = -0.35, 
-                           size = size) +
-    
-    ggraph::theme_graph() 
-}
-
-
-plot_annotation(sent_depend, size = 4) +
-  labs(title = sentence)
+textplot::textplot_dependencyparser(sent_depend, title = sentence, subtitle = NULL)
 ```
+
+
 
 
 
