@@ -21,7 +21,7 @@ source("/home/jtimm/pCloudDrive/GitHub/git-projects/render_toc.R")
 
 
 ```{r echo=FALSE}
-render_toc("/home/jtimm/pCloudDrive/GitHub/nlp-cheat-r/README.Rmd")
+render_toc("/home/jtimm/pCloudDrive/GitHub/git-projects/nlp-cheat-r/README.Rmd")
 ```
 
 
@@ -75,10 +75,25 @@ strwrap(tsearch$text[1], width = 60)
 
 ## Processing
 
-### Tokenization
+
+### Sentence tokenization
 
 ```{r}
-a1 <- corpus::text_tokens(news$text,
+sentences <- PubmedMTK::pmtk_toke_sentences(text = news$text,
+                                            doc_id = 1:nrow(news))
+
+sentences %>% head() %>% knitr::kable()
+```
+
+
+
+
+### Tokenization
+
+The order here is wrong; we want to identify sentences, then tokenize -- 
+
+```{r}
+a1 <- corpus::text_tokens(sentences$text,
                           
   filter = corpus::text_filter(
     map_case = TRUE, 
@@ -98,19 +113,42 @@ a1 <- corpus::text_tokens(news$text,
     sent_crlf = FALSE)
   )
 
-names(a1) <- 1:nrow(news)
-a1[[1]][1:20]
+names(a1) <-sentences$doc_id
+a1[[1]]
 ```
 
 
-### Sentence tokenization
+### Tokens to data frame
 
 ```{r}
-sentences <- PubmedMTK::pmtk_toke_sentences(text = news$text,
-                                            doc_id = 1:nrow(news))
-
-sentences %>% head() %>% knitr::kable()
+a2 <- PubmedMTK::pmtk_cast_tokens(a1)
+a2 %>%  slice(1:10)
 ```
+
+
+```{r}
+a4 <- a2 %>%
+  separate(doc_id, 
+           into = c('doc_id', 'sentence_id'), 
+           sep = '[.]')
+```
+
+
+
+
+### Sentences containing X
+
+```{r}
+jrb_sentences <- a2[, if(any(token == 'biden')) .SD, by = list(doc_id)]
+jrb_sentences0 <- jrb_sentences[, list(text = paste(token, collapse = " ")), by = doc_id]
+
+jrb_sentences0 %>% head() %>% knitr::kable()
+```
+
+
+
+
+
 
 
 
@@ -121,14 +159,34 @@ udmodel_dir <- '/home/jtimm/pCloudDrive/GitHub/packages/biberizer/'
 ```
 
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 setwd(paste0(udmodel_dir, 'model'))
 udmodel <- udpipe::udpipe_load_model('english-ewt-ud-2.3-181115.udpipe')
+```
 
+
+
+Collapse token list by doc_id 
+
+```{r}
+names(a1) <- gsub('\\..*$', '', names(a1))
+a3 <- sapply(unique(names(a1)), 
+             function(x) unname(unlist(a1[names(a1)==x])), 
+             simplify=FALSE)
+```
+
+
+
+
+```{r message=FALSE, warning=FALSE}
 x0 <- udpipe::udpipe(object = udmodel,
-                     x = a1,
+                     x = a3,
                      tagger = 'default', 
                      parser = 'none')
+
+colnames(x0)
+
+x1 <- cbind(a4, x0[, c(10:16)])
 ```
 
 
@@ -191,12 +249,12 @@ nps1 %>%
 # data.table::setDT(lex)
 # ms <- subset(lex, lex$ngram > 1)
 
-x0$newness <- udpipe::txt_recode_ngram(tolower(x0$token),
+x1$newness <- udpipe::txt_recode_ngram(tolower(x1$token),
                                        compound = c(nps1$keyword),
                                        ngram = c(nps1$ngram),
                                        sep = '_')
 
-x0 %>%
+x1 %>%
   select(doc_id, token:xpos, newness) %>%
   filter(grepl('_', newness)) %>%
   head() %>%
@@ -210,14 +268,14 @@ x0 %>%
 Normalizing to lemma --
 
 ```{r}
-x1 <- x0 %>%
+x2 <- x1 %>%
   filter(!is.na(newness)) %>%
   mutate(newness = ifelse(grepl('_', newness), newness, lemma)) 
 
-x2 <- x1 %>%
+x3 <- x2 %>%
   count(doc_id, newness)
 
-dtm <- tidytext::cast_sparse(data = x2,
+dtm <- tidytext::cast_sparse(data = x3,
                              row = doc_id,
                              column = newness,
                              value = n)
@@ -228,10 +286,10 @@ str(dtm)
 ### Rebuilding text
 
 ```{r}
-new_text <- data.table::setDT(x1)[, list(text = paste(newness, collapse = " ")), 
+new_text <- data.table::setDT(x2)[, list(text = paste(newness, collapse = " ")), 
                                   by = doc_id]
 
-strwrap(new_text$text[1], width = 60)[1:10]
+strwrap(new_text$text[5], width = 60)[1:10]
 ```
 
 
@@ -247,7 +305,7 @@ model.d2v <- doc2vec::paragraph2vec(x = new_text0,
                                     type = "PV-DM", 
                                     dim = 100, 
                                     iter = 20,
-                                    min_count = 5, 
+                                    min_count = 2, 
                                     lr = 0.05, 
                                     threads = 1)
 
@@ -257,6 +315,12 @@ embedding.docs <- as.matrix(model.d2v,   which = "docs")
 both <- do.call(rbind, list(embedding.docs, embedding.words))
 ```
 
+
+```{r}
+predict(model.d2v, 'biden', 
+        type = "nearest",
+        which = "word2word")[[1]]
+```
 
 
 
