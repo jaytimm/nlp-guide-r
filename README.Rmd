@@ -8,7 +8,7 @@ output:
 
 
 
-A summary of some R-based, NLP workflows -- mostly using `udpipe`.
+A summary of some (more upstream) NLP workflows -- mostly using the [udpipe](https://github.com/bnosac/udpipe) package.
 
 ---
 
@@ -93,7 +93,7 @@ sentences %>% head() %>% knitr::kable()
 
 ### Tokenization
 
-> Tokenization serves many purposes; perhaps most importantly, it allows the user to specify how words will be defined.  The `text_tokens` function from the `corpus` [package](https://github.com/patperry/r-corpus) is hands down the best available tokenizer in R.  
+> Tokenization allows the user to specify how words will be defined.  The `text_tokens` function from the [corpus](https://github.com/patperry/r-corpus) package is hands down the best available tokenizer in R.  
 
 ```{r}
 a1 <- corpus::text_tokens(sentences$text,
@@ -194,7 +194,7 @@ x0 %>%
 
 
 
-## Multi-word expressions
+## Multiword expressions
 
 ### Collocations
 
@@ -275,13 +275,11 @@ x2 <- x0 %>%
   filter(!is.na(newness)) %>%
   mutate(newness = ifelse(grepl('_', newness), newness, lemma)) 
 
-x3 <- x2 %>%
-  count(doc_id, newness)
-
-dtm <- tidytext::cast_sparse(data = x3,
-                             row = doc_id,
-                             column = newness,
-                             value = n)
+dtm <- x2 %>% 
+  count(doc_id, newness) %>%
+  tidytext::cast_sparse(row = doc_id,
+                        column = newness,
+                        value = n)
 str(dtm)
 ```
 
@@ -327,9 +325,9 @@ predict(model.d2v, 'Biden',
 
 
 
-## Search
+## Search in context
 
-### Search in context
+> Based on the `corpus::text_locate` function.
 
 ```{r}
 egs <- PubmedMTK::pmtk_locate_term(text = a1,
@@ -348,11 +346,13 @@ egs %>% head() %>% knitr::kable()
 
 ### Visualizing dependencies
 
-```{r fig.height=5}
+```{r fig.height=5, message=FALSE, warning=FALSE}
 sentence <- "The green giant wishes for Jackie-boy only good things"
 sent_depend <- udpipe::udpipe(udmodel, x = sentence)
 
-textplot::textplot_dependencyparser(sent_depend, title = sentence, subtitle = NULL)
+textplot::textplot_dependencyparser(sent_depend, 
+                                    title = sentence, 
+                                    subtitle = NULL)
 ```
 
 

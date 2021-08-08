@@ -1,7 +1,8 @@
 NLP with R: some notes
 ======================
 
-A summary of some R-based, NLP workflows – mostly using `udpipe`.
+A summary of some (more upstream) NLP workflows – mostly using the
+[udpipe](https://github.com/bnosac/udpipe) package.
 
 ------------------------------------------------------------------------
 
@@ -24,8 +25,7 @@ A summary of some R-based, NLP workflows – mostly using `udpipe`.
         -   [Annotation to DTM](#annotation-to-dtm)
         -   [Rebuilding text](#rebuilding-text)
     -   [doc2vec](#doc2vec)
-    -   [Search](#search)
-        -   [Search in context](#search-in-context)
+    -   [Search in context](#search-in-context)
     -   [Odds](#odds)
         -   [Visualizing dependencies](#visualizing-dependencies)
 
@@ -93,9 +93,15 @@ tsearch <- rtweet::search_tweets(q = '#Jan6',
 strwrap(tsearch$text[1], width = 60)
 ```
 
-    ## [1] "Get the call logs from Jan 2020 through noon on Jan 20,"
-    ## [2] "2021!!! WTF is this even a question!! #Jan6"            
-    ## [3] "https://t.co/DHhc7tZPVg"
+    ## [1] "Just setting this down here.... ⚖️⌛️"                      
+    ## [2] ""                                                        
+    ## [3] "#Insurrections MUST have consequences, or they are just" 
+    ## [4] "practice for the next one."                              
+    ## [5] ""                                                        
+    ## [6] "@January6thCmte no time for an August recess. No time to"
+    ## [7] "waste. Our democracy is in danger. @BennieGThompson"     
+    ## [8] ""                                                        
+    ## [9] "#Jan6 https://t.co/yAn2uzYerq"
 
 Processing
 ----------
@@ -153,10 +159,10 @@ sentences %>% head() %>% knitr::kable()
 
 ### Tokenization
 
-> Tokenization serves many purposes; perhaps most importantly, it allows
-> the user to specify how words will be defined. The `text_tokens`
-> function from the `corpus` package is hands down the best available
-> tokenizer in R.
+> Tokenization allows the user to specify how words will be defined. The
+> `text_tokens` function from the
+> [corpus](https://github.com/patperry/r-corpus) package is hands down
+> the best available tokenizer in R.
 
 ``` r
 a1 <- corpus::text_tokens(sentences$text,
@@ -357,12 +363,12 @@ collocations0 %>%
 
 | keyword         |  freq|     pmi|
 |:----------------|-----:|-------:|
-| to do the right |     4|   9.984|
-| in the world    |     4|   6.964|
-| or otherwise    |     3|   8.215|
-| United States   |    11|  10.528|
-| as well         |     6|   6.973|
-| is going        |     5|   5.616|
+| Center Week     |     4|  10.369|
+| Cold War        |     4|  11.185|
+| money for       |     3|   5.495|
+| with Democratic |     3|   5.337|
+| Psaki said      |     3|   8.699|
+| Center for      |     3|   5.035|
 
 ### Noun phrases
 
@@ -392,11 +398,11 @@ nps1 %>%
 
 | keyword                             | pattern |  ngram|    n|
 |:------------------------------------|:--------|------:|----:|
-| assembly\_plant\_in\_Pennsylvania’s | NNPN    |      4|    1|
-| presidents\_Donald                  | NN      |      2|    1|
-| one\_aide                           | AN      |      2|    1|
-| public\_support                     | AN      |      2|    1|
-| comeback\_primary\_campaign         | NAN     |      3|    1|
+| United\_States                      | NN      |      2|   11|
+| Author\_Michael\_Wolff\_last\_month | NNNAN   |      5|    1|
+| Quinnipiac\_University\_poll        | NNN     |      3|    1|
+| Budget\_Committee\_staffer          | NNN     |      3|    1|
+| health\_care\_expansion             | NNN     |      3|    1|
 
 ### Tokenizing multi-word expressions
 
@@ -437,24 +443,22 @@ x2 <- x0 %>%
   filter(!is.na(newness)) %>%
   mutate(newness = ifelse(grepl('_', newness), newness, lemma)) 
 
-x3 <- x2 %>%
-  count(doc_id, newness)
-
-dtm <- tidytext::cast_sparse(data = x3,
-                             row = doc_id,
-                             column = newness,
-                             value = n)
+dtm <- x2 %>% 
+  count(doc_id, newness) %>%
+  tidytext::cast_sparse(row = doc_id,
+                        column = newness,
+                        value = n)
 str(dtm)
 ```
 
     ## Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-    ##   ..@ i       : int [1:6086] 0 1 2 4 5 6 7 9 10 11 ...
-    ##   ..@ p       : int [1:3380] 0 16 35 44 47 55 75 90 105 120 ...
-    ##   ..@ Dim     : int [1:2] 20 3379
+    ##   ..@ i       : int [1:5533] 0 1 2 3 5 6 10 11 12 14 ...
+    ##   ..@ p       : int [1:3203] 0 14 32 40 43 50 70 83 100 117 ...
+    ##   ..@ Dim     : int [1:2] 20 3202
     ##   ..@ Dimnames:List of 2
     ##   .. ..$ : chr [1:20] "1" "10" "11" "12" ...
-    ##   .. ..$ : chr [1:3379] "-" "," ":" "!" ...
-    ##   ..@ x       : num [1:6086] 12 4 3 9 18 1 2 7 1 6 ...
+    ##   .. ..$ : chr [1:3202] "-" "," ":" "!" ...
+    ##   ..@ x       : num [1:5533] 12 4 3 18 9 1 4 6 1 11 ...
     ##   ..@ factors : list()
 
 ### Rebuilding text
@@ -500,22 +504,22 @@ predict(model.d2v, 'Biden',
         which = "word2word")[[1]]
 ```
 
-    ##    term1       term2 similarity rank
-    ## 1  Biden         yet  0.9094913    1
-    ## 2  Biden        want  0.9051867    2
-    ## 3  Biden    Governor  0.8984227    3
-    ## 4  Biden      anyone  0.8955018    4
-    ## 5  Biden    although  0.8914970    5
-    ## 6  Biden        seem  0.8857898    6
-    ## 7  Biden         I'm  0.8849170    7
-    ## 8  Biden   important  0.8815561    8
-    ## 9  Biden Machiavelli  0.8785341    9
-    ## 10 Biden     doesnot  0.8752789   10
+    ##    term1     term2 similarity rank
+    ## 1  Biden   Biden's  0.9230522    1
+    ## 2  Biden  tan_suit  0.8602040    2
+    ## 3  Biden       yet  0.8596079    3
+    ## 4  Biden   largely  0.8540209    4
+    ## 5  Biden      draw  0.8537375    5
+    ## 6  Biden      talk  0.8423741    6
+    ## 7  Biden President  0.8417282    7
+    ## 8  Biden   provide  0.8187718    8
+    ## 9  Biden   doesnot  0.8157279    9
+    ## 10 Biden     small  0.8123387   10
 
-Search
-------
+Search in context
+-----------------
 
-### Search in context
+> Based on the `corpus::text_locate` function.
 
 ``` r
 egs <- PubmedMTK::pmtk_locate_term(text = a1,
@@ -562,22 +566,22 @@ egs %>% head() %>% knitr::kable()
 <td style="text-align: left;">to refrain from coming to Ground Zero to mark the 20th</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">6.3</td>
-<td style="text-align: left;">The bipartisan infrastructure deal embraced by President</td>
-<td style="text-align: left;">Joe Biden</td>
-<td style="text-align: left;">and shaped by a gang of 10 senators is inching closer</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">7.2</td>
+<td style="text-align: left;">4.2</td>
 <td style="text-align: left;">With rare exceptions ,</td>
 <td style="text-align: left;">Joe Biden</td>
 <td style="text-align: left;">throughout his presidency has stressed his determination to cooperate with the</td>
 </tr>
-<tr class="even">
-<td style="text-align: left;">7.96</td>
+<tr class="odd">
+<td style="text-align: left;">4.96</td>
 <td style="text-align: left;">“ Will</td>
 <td style="text-align: left;">Joe Biden</td>
 <td style="text-align: left;">feel he’s in a good place for reelection when we don’t</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">7.3</td>
+<td style="text-align: left;">The bipartisan infrastructure deal embraced by President</td>
+<td style="text-align: left;">Joe Biden</td>
+<td style="text-align: left;">and shaped by a gang of 10 senators is inching closer</td>
 </tr>
 </tbody>
 </table>
@@ -591,9 +595,9 @@ Odds
 sentence <- "The green giant wishes for Jackie-boy only good things"
 sent_depend <- udpipe::udpipe(udmodel, x = sentence)
 
-textplot::textplot_dependencyparser(sent_depend, title = sentence, subtitle = NULL)
+textplot::textplot_dependencyparser(sent_depend, 
+                                    title = sentence, 
+                                    subtitle = NULL)
 ```
-
-    ## Loading required namespace: ggraph
 
 ![](README_files/figure-markdown_github/unnamed-chunk-22-1.png)
