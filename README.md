@@ -13,10 +13,9 @@ A summary of some (more upstream) NLP workflows – mostly using the
         -   [PubMed abstracts](#pubmed-abstracts)
         -   [Tweets](#tweets)
     -   [Processing](#processing)
-        -   [Sentence extraction](#sentence-extraction)
+        -   [Sentence splitting](#sentence-splitting)
         -   [Tokenization](#tokenization)
         -   [Tokens to data frame](#tokens-to-data-frame)
-        -   [Sentences containing X](#sentences-containing-x)
     -   [Annotation](#annotation)
     -   [Multiword expressions](#multiword-expressions)
         -   [Collocations](#collocations)
@@ -26,9 +25,12 @@ A summary of some (more upstream) NLP workflows – mostly using the
         -   [Annotation to DTM](#annotation-to-dtm)
         -   [Rebuilding text](#rebuilding-text)
     -   [doc2vec](#doc2vec)
-    -   [Search in context](#search-in-context)
+    -   [Search](#search)
+        -   [Search in context](#search-in-context)
+        -   [Sentences containing X](#sentences-containing-x)
     -   [Odds](#odds)
         -   [Visualizing dependencies](#visualizing-dependencies)
+    -   [Summary](#summary)
 
 Quick live text
 ---------------
@@ -44,28 +46,28 @@ news <- quicknews::qnews_extract_article(url = meta$link[1:20],
 strwrap(news$text[10], width = 60)[1:5]
 ```
 
-    ## [1] "Julian Zelizer, a CNN political analyst, is a professor of"  
-    ## [2] "history and public affairs at Princeton University and"      
-    ## [3] "author of the book, \"Burning Down the House: Newt Gingrich,"
-    ## [4] "the Fall of a Speaker, and the Rise of the New Republican"   
-    ## [5] "Party.\" Follow him on Twitter @julianzelizer. The views"
+    ## [1] "Remember moderate Democrat Joe Biden’s lackluster 2020"     
+    ## [2] "Campaign, which willingly reduced public appearances and"   
+    ## [3] "probing press questions, citing COVID concerns? With little"
+    ## [4] "opportunity to assess aging Biden, did we really know his"  
+    ## [5] "intentions? Did it matter? Was he actually the likeable"
 
 ### PubMed abstracts
 
 ``` r
-s0 <- PubmedMTK::pmtk_search_pubmed(search_term = 'medical marijuana', 
-                                    fields = c('TIAB','MH'))
+pmids <- PubmedMTK::pmtk_search_pubmed(search_term = 'medical marijuana', 
+                                       fields = c('TIAB','MH'))
 ```
 
     ## [1] "medical marijuana[TIAB] OR medical marijuana[MH]: 2206 records"
 
 ``` r
-s1 <- PubmedMTK::pmtk_get_records2(pmids = s0$pmid[1:10], 
-                                   cores = 3 #, 
-                                   #ncbi_key = key
-                                   )
+abstracts <- PubmedMTK::pmtk_get_records2(pmids = pmids$pmid[1:10], 
+                                          cores = 3 #, 
+                                          #ncbi_key = key
+                                          )
 
-strwrap(s1[[1]]$abstract, width = 60)[1:10]
+strwrap(abstracts[[1]]$abstract, width = 60)[1:10]
 ```
 
     ##  [1] "People living with HIV (PLWH) experience higher rates of"   
@@ -82,7 +84,7 @@ strwrap(s1[[1]]$abstract, width = 60)[1:10]
 ### Tweets
 
 ``` r
-tsearch <- rtweet::search_tweets(q = '#Jan6',
+tweets <-  rtweet::search_tweets(q = '#Jan6',
                                  n = 100,
                                  type = "recent",
                                  include_rts = FALSE,
@@ -91,23 +93,30 @@ tsearch <- rtweet::search_tweets(q = '#Jan6',
                                  parse = TRUE,
                                  token = NULL)
 
-strwrap(tsearch$text[1], width = 60)
+strwrap(tweets$text[1], width = 60)
 ```
 
-    ## [1] "#GymJordan #Jan6 #PoliticalMoron #BulldogPolitics"
-    ## [2] "https://t.co/IPNNHxaDv7 https://t.co/TbyyyyaJa3"
+    ## [1] "@AssemblyRoomUSA @MasterOfPsy @JoeBiden @humanrights1st A"  
+    ## [2] "lame attempt to distract. You know you’ve been caught, Jim."
+    ## [3] "@Jim_Jordan #Jan6 will haunt you forever. The @FBI is"      
+    ## [4] "lurking. #Lackey @RepSwalwell @RepAdamSchiff @PostOpinions" 
+    ## [5] "@nytopinion @SpeakerPelosi @DevinNunes — you too Devin."    
+    ## [6] "Only a matter of time. @JKSuicideWatch @maddow"             
+    ## [7] "https://t.co/Qv3qpYGbVF https://t.co/tbCOLW29xb"
 
 Processing
 ----------
 
-### Sentence extraction
+### Sentence splitting
 
-> The `pmtk_toke_sentences` function from the `PumbedMTK` package is a
-> simple wrapper to the `corpus::text_split` function.
+> The `pmtk_split_sentences` function from the `PumbedMTK` package is a
+> simple wrapper to the `corpus::text_split` function. The function is
+> mindful of stops used in titles/honorifics (eg, Mr., Dr., Ms., etc.)
+> and common acronyms (eg, U.S.A.) when delineating sentences.
 
 ``` r
-sentences <- PubmedMTK::pmtk_toke_sentences(text = news$text,
-                                            doc_id = 1:nrow(news))
+sentences <- PubmedMTK::pmtk_split_sentences(text = news$text,
+                                             doc_id = 1:nrow(news))
 
 sentences %>% head() %>% knitr::kable()
 ```
@@ -126,38 +135,38 @@ sentences %>% head() %>% knitr::kable()
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">1.1</td>
-<td style="text-align: left;">Nine months after the election he comprehensively lost, the spectre of Donald Trump – darkly menacing, subversive and apparently immune from prosecution – continues to cast a shadow over US democracy and America’s global standing, distorting policy and poisoning political life.</td>
+<td style="text-align: left;">WILMINGTON, Del.</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">1.2</td>
-<td style="text-align: left;">How can this be?</td>
+<td style="text-align: left;">(AP) — After more than six months of work combating the coronavirus, negotiating a bipartisan infrastructure bill and repairing the U.S. image abroad, President Joe Biden should be heading out on vacation and a traditional August break from Washington.</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">1.3</td>
-<td style="text-align: left;">Why is this horror movie still running?</td>
+<td style="text-align: left;">But with legislative work on the infrastructure bill keeping the Senate in session for a second straight weekend, and likely through next week, Biden hasn’t gone far — just home to Wilmington, Delaware, as he has done most weekends since taking office.</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">1.4</td>
-<td style="text-align: left;">Trumpism, like other fascist variants, is a disease, a blight – a noxious far-right populist-nationalist miasma that taints and rots all it touches.</td>
+<td style="text-align: left;">“Every president is always working no matter where they are,” White House press secretary Jen Psaki said, explaining that presidents can’t ever really tune out.</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">1.5</td>
-<td style="text-align: left;">Older Europeans share a folk memory of fascism.</td>
+<td style="text-align: left;">Biden will spend some of next week at the White House before he decamps again, either for Delaware — he also owns a home in Rehoboth Beach — or Camp David, the official presidential retreat in Maryland’s Catoctin Mountains, Psaki said.</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">1.6</td>
-<td style="text-align: left;">But too many Americans just don’t get it.</td>
+<td style="text-align: left;">The modern president is never completely free from work, tethered by secure telephone lines and other technology with a coterie of top aides and advisers always close by.</td>
 </tr>
 </tbody>
 </table>
 
 ### Tokenization
 
-> The `text_tokens` function from the `corpus` package is absolutely
-> lovely.
+> The `text_tokens` function from the `corpus` package provides a host
+> of options for text tokenization.
 
 ``` r
-a1 <- corpus::text_tokens(sentences$text,
+tokens <- corpus::text_tokens(sentences$text,
                           
   filter = corpus::text_filter(
     map_case = FALSE, 
@@ -177,99 +186,32 @@ a1 <- corpus::text_tokens(sentences$text,
     sent_crlf = FALSE)
   )
 
-names(a1) <-sentences$doc_id
-a1[[1]]
+names(tokens) <-sentences$doc_id
+tokens[[1]]
 ```
 
-    ##  [1] "Nine"            "months"          "after"           "the"            
-    ##  [5] "election"        "he"              "comprehensively" "lost"           
-    ##  [9] ","               "the"             "spectre"         "of"             
-    ## [13] "Donald"          "Trump"           "–"               "darkly"         
-    ## [17] "menacing"        ","               "subversive"      "and"            
-    ## [21] "apparently"      "immune"          "from"            "prosecution"    
-    ## [25] "–"               "continues"       "to"              "cast"           
-    ## [29] "a"               "shadow"          "over"            "US"             
-    ## [33] "democracy"       "and"             "America's"       "global"         
-    ## [37] "standing"        ","               "distorting"      "policy"         
-    ## [41] "and"             "poisoning"       "political"       "life"           
-    ## [45] "."
+    ## [1] "WILMINGTON" ","          "Del"        "."
 
 ### Tokens to data frame
 
 > A simple approach to reshaping token objects.
 
 ``` r
-a2 <- PubmedMTK::pmtk_cast_tokens(a1)
-a2 %>%  slice(1:10)
+tokens_df <- PubmedMTK::pmtk_cast_tokens(tokens)
+tokens_df %>%  slice(1:10)
 ```
 
-    ##     doc_id sentence_id token_id           token
-    ##  1:      1           1        1            Nine
-    ##  2:      1           1        2          months
-    ##  3:      1           1        3           after
-    ##  4:      1           1        4             the
-    ##  5:      1           1        5        election
-    ##  6:      1           1        6              he
-    ##  7:      1           1        7 comprehensively
-    ##  8:      1           1        8            lost
-    ##  9:      1           1        9               ,
-    ## 10:      1           1       10             the
-
-### Sentences containing X
-
-``` r
-jrb_sentences <- a2[, if(any(token == 'Biden')) .SD, by = list(doc_id,sentence_id)]
-jrb_sentences0 <- jrb_sentences[, list(text = paste(token, collapse = " ")), by = list(doc_id,sentence_id)]
-
-jrb_sentences0 %>% head() %>% knitr::kable()
-```
-
-<table>
-<colgroup>
-<col style="width: 2%" />
-<col style="width: 4%" />
-<col style="width: 93%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">doc_id</th>
-<th style="text-align: left;">sentence_id</th>
-<th style="text-align: left;">text</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">8</td>
-<td style="text-align: left;">By refusing to confront his crooked predecessor and bring him to justice , Joe Biden feeds delusional Trump’s sense of godlike impunity , and the dread prospect of a blasphemous second coming .</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">12</td>
-<td style="text-align: left;">Maybe Biden lacks the killer instinct .</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">36</td>
-<td style="text-align: left;">Asked what he would do about Trump’s crimes , Biden said last August that to pursue his predecessor in court would be “ very unusual ” .</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">46</td>
-<td style="text-align: left;">But still Biden and Garland sit on their hands .</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">60</td>
-<td style="text-align: left;">Biden struggles daily with the toxic fallout .</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">2</td>
-<td style="text-align: left;">2</td>
-<td style="text-align: left;">( AP ) — After more than six months of work combating the coronavirus , negotiating a bipartisan infrastructure bill and repairing the U.S. image abroad , President Joe Biden should be heading out on vacation and a traditional August break from Washington .</td>
-</tr>
-</tbody>
-</table>
+    ##     doc_id sentence_id token_id      token
+    ##  1:      1           1        1 WILMINGTON
+    ##  2:      1           1        2          ,
+    ##  3:      1           1        3        Del
+    ##  4:      1           1        4          .
+    ##  5:      1           2        1          (
+    ##  6:      1           2        2         AP
+    ##  7:      1           2        3          )
+    ##  8:      1           2        4          —
+    ##  9:      1           2        5      After
+    ## 10:      1           2        6       more
 
 Annotation
 ----------
@@ -279,31 +221,29 @@ setwd(paste0(udmodel_dir, 'model'))
 udmodel <- udpipe::udpipe_load_model('english-ewt-ud-2.3-181115.udpipe')
 ```
 
-> The `udpipe` package can be used to annotate token objects; however,
-> sentence details are not captured. Below we add a newline to the end
-> of every sentence in the corpus, and aggregate the sentence-level
-> tokens to document-level. This minor hack works (ie, helps the
-> annotator identify sentences), and the resulting annotation contains
-> the same number of rows as the table generated by `pmtk_cast_tokens`.
-> Ie, tokens in, tokens out.
+> The `udpipe` package can be used to annotate simple text or token
+> objects. The utility of annotating a token object versus simple text,
+> however, is that the user specifies what constitutes a token and what
+> constitutes a sentence.
+
+> One issue with token objects is that sentence info is less obvious to
+> annotators. The `pmtk_rebuild_sentences` function hacks around this by
+> adding a newline character to the end of every tokenized sentence in
+> the corpus, and aggregating the sentence-level tokens to
+> document-level.
 
 ``` r
-## a possible function -- 
-a01 <- lapply(a1, c, '\n')
-names(a01) <- gsub('\\..*$', '', names(a1))
-
-a3 <- sapply(unique(names(a01)), 
-             function(x) unname(unlist(a01[names(a01) == x])), 
-             simplify=FALSE)
+tokens1 <- PubmedMTK::pmtk_rebuild_sentences(x = tokens,
+                                             sentence_id = names(tokens))
 ```
 
 ``` r
-x0 <- udpipe::udpipe(object = udmodel,
-                     x = a3,
-                     tagger = 'default', 
-                     parser = 'default')
+annotation <- udpipe::udpipe(object = udmodel,
+                             x = tokens1,
+                             tagger = 'default', 
+                             parser = 'default')
 
-colnames(x0)
+colnames(annotation)
 ```
 
     ##  [1] "doc_id"        "paragraph_id"  "sentence_id"   "sentence"     
@@ -312,27 +252,21 @@ colnames(x0)
     ## [13] "feats"         "head_token_id" "dep_rel"       "deps"         
     ## [17] "misc"
 
-> The utility of annotating a token object versus simple text is that
-> the user specifies what constitutes a token and what constitutes a
-> sentence. PoS/dependency annotators are not the best tokenizers or
-> sentence extractors. Doing some of the dirty work prior to annotation
-> really goes a long way in preserving text structure.
-
 ``` r
-x0 %>%
+annotation %>%
   select(doc_id, sentence_id, token_id:xpos) %>%
   head() %>%
   knitr::kable()
 ```
 
-| doc\_id |  sentence\_id| token\_id | token    | lemma    | upos | xpos |
-|:--------|-------------:|:----------|:---------|:---------|:-----|:-----|
-| 1       |             1| 1         | Nine     | nine     | NUM  | CD   |
-| 1       |             1| 2         | months   | month    | NOUN | NNS  |
-| 1       |             1| 3         | after    | after    | ADP  | IN   |
-| 1       |             1| 4         | the      | the      | DET  | DT   |
-| 1       |             1| 5         | election | election | NOUN | NN   |
-| 1       |             1| 6         | he       | he       | PRON | PRP  |
+| doc\_id |  sentence\_id| token\_id | token      | lemma      | upos  | xpos  |
+|:--------|-------------:|:----------|:-----------|:-----------|:------|:------|
+| 1       |             1| 1         | WILMINGTON | WILMINGTON | PROPN | NNP   |
+| 1       |             1| 2         | ,          | ,          | PUNCT | ,     |
+| 1       |             1| 3         | Del        | del        | PROPN | NNP   |
+| 1       |             1| 4         | .          | .          | PUNCT | .     |
+| 1       |             2| 1         | (          | (          | PUNCT | -LRB- |
+| 1       |             2| 2         | AP         | ap         | NOUN  | NN    |
 
 Multiword expressions
 ---------------------
@@ -340,7 +274,7 @@ Multiword expressions
 ### Collocations
 
 ``` r
-collocations <- udpipe::collocation(x = x0,
+collocations <- udpipe::collocation(x = annotation,
                                     term = 'token',
                                     group = c('doc_id'),
                                     ngram_max = 5,
@@ -356,23 +290,24 @@ collocations0 %>%
   knitr::kable()
 ```
 
-| keyword       |  freq|    pmi|
-|:--------------|-----:|------:|
-| related to    |     3|  5.192|
-| well as       |     3|  5.940|
-| Psaki said    |     3|  8.827|
-| importance of |     3|  5.567|
-| a lot         |     3|  5.090|
-| on the stage  |     4|  9.255|
+| keyword      |  freq|     pmi|
+|:-------------|-----:|-------:|
+| in late July |     3|  10.622|
+| he wants     |     3|   6.796|
+| get out      |     4|   6.601|
+| red states   |     5|   9.302|
+| might not    |     4|   7.252|
+| if you       |     5|   7.512|
 
 ### Noun phrases
 
 ``` r
-x0$phrase_tag <- udpipe::as_phrasemachine(x0$xpos, 
-                                          type = "penn-treebank")
+annotation$phrase_tag <- udpipe::as_phrasemachine(annotation$xpos, 
+                                                  type = "penn-treebank")
 
-splits <- split(x0, f = x0$doc_id)
+splits <- split(annotation, f = annotation$doc_id)
 
+## lapply to preserve doc_id info
 nps <- lapply(1:length(splits), function(x) {
   udpipe::keywords_phrases(x = splits[[x]]$phrase_tag,
                            term = splits[[x]]$token,
@@ -391,13 +326,13 @@ nps1 %>%
   knitr::kable()
 ```
 
-| keyword                | pattern |  ngram|    n|
-|:-----------------------|:--------|------:|----:|
-| nuclear\_pact          | AN      |      2|    1|
-| back-to-back\_voting   | AN      |      2|    1|
-| American\_Rescue\_Plan | NNN     |      3|    1|
-| all-time\_low          | AN      |      2|    1|
-| Congressional\_Budget  | NN      |      2|    1|
+| keyword            | pattern |  ngram|    n|
+|:-------------------|:--------|------:|----:|
+| One\_bill          | AN      |      2|    1|
+| approval\_ratings  | NN      |      2|    2|
+| jobs\_numbers      | NN      |      2|    1|
+| Senate\_filibuster | NN      |      2|    1|
+| many\_party        | AN      |      2|    1|
 
 ### Tokenizing multiword expressions
 
@@ -409,26 +344,26 @@ nps1 %>%
 # data.table::setDT(lex)
 # ms <- subset(lex, lex$ngram > 1)
 
-x0$newness <- udpipe::txt_recode_ngram(tolower(x0$token),
-                                       compound = c(nps1$keyword),
-                                       ngram = c(nps1$ngram),
-                                       sep = '_')
+annotation$newness <- udpipe::txt_recode_ngram(tolower(annotation$token),
+                                               compound = c(nps1$keyword),
+                                               ngram = c(nps1$ngram),
+                                               sep = '_')
 
-x0 %>%
+annotation %>%
   select(doc_id, token:xpos, newness) %>%
   filter(grepl('_', newness)) %>%
   head() %>%
   knitr::kable()
 ```
 
-| doc\_id | token     | lemma     | upos | xpos | newness                                          |
-|:--------|:----------|:----------|:-----|:-----|:-------------------------------------------------|
-| 1       | darkly    | darkly    | ADJ  | JJ   | darkly\_menacing                                 |
-| 1       | global    | global    | ADJ  | JJ   | global\_standing                                 |
-| 1       | political | political | ADJ  | JJ   | political\_life                                  |
-| 1       | horror    | horror    | NOUN | NN   | horror\_movie                                    |
-| 1       | other     | other     | ADJ  | JJ   | other\_fascist\_variants                         |
-| 1       | noxious   | noxious   | ADJ  | JJ   | noxious\_far-right\_populist-nationalist\_miasma |
+| doc\_id | token       | lemma       | upos | xpos | newness                                    |
+|:--------|:------------|:------------|:-----|:-----|:-------------------------------------------|
+| 1       | six         | six         | NUM  | CD   | six\_months\_of\_work                      |
+| 1       | bipartisan  | bipartisan  | ADJ  | JJ   | bipartisan\_infrastructure\_bill           |
+| 1       | legislative | legislative | ADJ  | JJ   | legislative\_work\_on\_the\_infrastructure |
+| 1       | second      | second      | ADJ  | JJ   | second\_straight\_weekend                  |
+| 1       | next        | next        | ADJ  | JJ   | next\_week                                 |
+| 1       | most        | most        | ADJ  | JJS  | most\_weekends                             |
 
 ### Annotation to DTM
 
@@ -437,11 +372,11 @@ x0 %>%
 > fell swoop.
 
 ``` r
-x2 <- x0 %>%
+annotation0 <- annotation %>%
   filter(!is.na(newness)) %>%
   mutate(newness = ifelse(grepl('_', newness), newness, lemma)) 
 
-dtm <- x2 %>% 
+dtm <- annotation0 %>% 
   count(doc_id, newness) %>%
   tidytext::cast_sparse(row = doc_id,
                         column = newness,
@@ -450,29 +385,29 @@ str(dtm)
 ```
 
     ## Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-    ##   ..@ i       : int [1:5325] 0 2 3 4 5 9 11 14 15 16 ...
-    ##   ..@ p       : int [1:3129] 0 13 30 38 41 47 67 78 96 114 ...
-    ##   ..@ Dim     : int [1:2] 20 3128
+    ##   ..@ i       : int [1:5879] 0 1 2 6 7 8 9 10 12 13 ...
+    ##   ..@ p       : int [1:3399] 0 15 34 54 67 85 103 106 110 111 ...
+    ##   ..@ Dim     : int [1:2] 20 3398
     ##   ..@ Dimnames:List of 2
     ##   .. ..$ : chr [1:20] "1" "10" "11" "12" ...
-    ##   .. ..$ : chr [1:3128] "-" "," ":" "!" ...
-    ##   ..@ x       : num [1:5325] 12 18 3 9 1 4 6 11 1 6 ...
+    ##   .. ..$ : chr [1:3398] "-" "," "." "\"" ...
+    ##   ..@ x       : num [1:5879] 6 2 10 4 2 9 1 6 2 5 ...
     ##   ..@ factors : list()
 
 ### Rebuilding text
 
 ``` r
-new_text <- data.table::setDT(x2)[, list(text = paste(newness, collapse = " ")), 
+new_text <- data.table::setDT(annotation0)[, list(text = paste(newness, collapse = " ")), 
                                   by = doc_id]
 
 strwrap(new_text$text[5], width = 60)[1:5]
 ```
 
-    ## [1] "poll of the week : a new Quinnipiac University poll find"  
-    ## [2] "that President Joe Biden's approval_rating stand at 46_% ,"
-    ## [3] "while he disapproval rating_sits_at_43_% . he"             
-    ## [4] "approval_rating in Quinnipiac' previous_poll be 49_% ."    
-    ## [5] "What's the point : two week ago , I note that Biden's"
+    ## [1] "Jenna Ellis , a former_senior_legal_advisor to Donald Trump"
+    ## [2] "during he White House tenure , have stand by she suggestion"
+    ## [3] "that President Joe Biden should be impeach . speak on"      
+    ## [4] "Newsmax , to which she be a regular_contributor , Ellis"    
+    ## [5] "criticize Biden's action in regard to immigration at the"
 
 doc2vec
 -------
@@ -502,26 +437,28 @@ predict(model.d2v, 'Biden',
         which = "word2word")[[1]]
 ```
 
-    ##    term1       term2 similarity rank
-    ## 1  Biden         yet  0.9059902    1
-    ## 2  Biden     January  0.8999321    2
-    ## 3  Biden     largely  0.8763039    3
-    ## 4  Biden Machiavelli  0.8276467    4
-    ## 5  Biden      hehave  0.8262905    5
-    ## 6  Biden        talk  0.8206981    6
-    ## 7  Biden     Garland  0.8023541    7
-    ## 8  Biden        it's  0.7978688    8
-    ## 9  Biden       today  0.7951390    9
-    ## 10 Biden    consider  0.7914523   10
+    ##    term1           term2 similarity rank
+    ## 1  Biden           upend  0.9595785    1
+    ## 2  Biden approval_rating  0.9374418    2
+    ## 3  Biden          decide  0.9346738    3
+    ## 4  Biden            Jill  0.9337398    4
+    ## 5  Biden            poll  0.9299915    5
+    ## 6  Biden            come  0.9280250    6
+    ## 7  Biden            send  0.9277644    7
+    ## 8  Biden            mean  0.9272794    8
+    ## 9  Biden           stand  0.9263697    9
+    ## 10 Biden             pal  0.9262639   10
 
-Search in context
------------------
+Search
+------
+
+### Search in context
 
 > Based on the `corpus::text_locate` function.
 
 ``` r
-egs <- PubmedMTK::pmtk_locate_term(text = a1,
-                                   doc_id = names(a1),
+egs <- PubmedMTK::pmtk_locate_term(text = tokens,
+                                   doc_id = names(tokens),
                                    term = c('joe biden'),
                                    stem = F,
                                    window = 10)
@@ -546,40 +483,99 @@ egs %>% head() %>% knitr::kable()
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">1.8</td>
-<td style="text-align: left;">to confront his crooked predecessor and bring him to justice ,</td>
-<td style="text-align: left;">Joe Biden</td>
-<td style="text-align: left;">feeds delusional Trump’s sense of godlike impunity , and the dread</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">2.2</td>
+<td style="text-align: left;">1.2</td>
 <td style="text-align: left;">bipartisan infrastructure bill and repairing the U.S. image abroad , President</td>
 <td style="text-align: left;">Joe Biden</td>
 <td style="text-align: left;">should be heading out on vacation and a traditional August break</td>
 </tr>
-<tr class="odd">
-<td style="text-align: left;">3.1</td>
+<tr class="even">
+<td style="text-align: left;">2.1</td>
 <td style="text-align: left;">1,600 people affected by the September 11 attacks are asking President</td>
 <td style="text-align: left;">Joe Biden</td>
 <td style="text-align: left;">to refrain from coming to Ground Zero to mark the 20th</td>
 </tr>
+<tr class="odd">
+<td style="text-align: left;">3.1</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">Joe Biden</td>
+<td style="text-align: left;">declared his third candidacy for president on 25 April 2019 in</td>
+</tr>
 <tr class="even">
-<td style="text-align: left;">4.2</td>
+<td style="text-align: left;">4.1</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">Joe Biden</td>
+<td style="text-align: left;">was first in line to celebrate his pal Barack Obama’s birthday</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">5.1</td>
+<td style="text-align: left;">White House tenure , has stood by her suggestion that President</td>
+<td style="text-align: left;">Joe Biden</td>
+<td style="text-align: left;">should be impeached .</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">6.2</td>
 <td style="text-align: left;">With rare exceptions ,</td>
 <td style="text-align: left;">Joe Biden</td>
 <td style="text-align: left;">throughout his presidency has stressed his determination to cooperate with the</td>
 </tr>
+</tbody>
+</table>
+
+### Sentences containing X
+
+``` r
+jrb_sentences <- tokens_df[, if(any(token == 'Biden')) .SD, 
+                    by = list(doc_id,sentence_id)]
+
+jrb_sentences0 <- jrb_sentences[, list(text = paste(token, collapse = " ")), 
+                                by = list(doc_id,sentence_id)]
+
+jrb_sentences0 %>% head() %>% knitr::kable()
+```
+
+<table>
+<colgroup>
+<col style="width: 2%" />
+<col style="width: 4%" />
+<col style="width: 93%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">doc_id</th>
+<th style="text-align: left;">sentence_id</th>
+<th style="text-align: left;">text</th>
+</tr>
+</thead>
+<tbody>
 <tr class="odd">
-<td style="text-align: left;">4.96</td>
-<td style="text-align: left;">“ Will</td>
-<td style="text-align: left;">Joe Biden</td>
-<td style="text-align: left;">feel he’s in a good place for reelection when we don’t</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">( AP ) — After more than six months of work combating the coronavirus , negotiating a bipartisan infrastructure bill and repairing the U.S. image abroad , President Joe Biden should be heading out on vacation and a traditional August break from Washington .</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">8.1</td>
-<td style="text-align: left;">long — but it illustrated a crucial lesson in leadership that</td>
-<td style="text-align: left;">Joe Biden</td>
-<td style="text-align: left;">needs to learn , and soon .</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">But with legislative work on the infrastructure bill keeping the Senate in session for a second straight weekend , and likely through next week , Biden hasn’t gone far — just home to Wilmington , Delaware , as he has done most weekends since taking office .</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">Biden will spend some of next week at the White House before he decamps again , either for Delaware — he also owns a home in Rehoboth Beach — or Camp David , the official presidential retreat in Maryland’s Catoctin Mountains , Psaki said .</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">7</td>
+<td style="text-align: left;">Like his predecessors , Biden travels with a large entourage of aides , Secret Service agents and journalists in an unmistakable motorcade of more than a dozen dark vehicles .</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">13</td>
+<td style="text-align: left;">Biden and his aides are likely to discuss a range of issues , including getting the $ 1 trillion infrastructure bill through the Senate , strategizing next steps to counter surging coronavirus infections and eyeing the Aug. 31 deadline for the U.S. pullout from Afghanistan .</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">27</td>
+<td style="text-align: left;">During weekends at home in Wilmington , Biden has ventured out to play golf , attend Mass and head to his sister’s Pennsylvania home for family dinner .</td>
 </tr>
 </tbody>
 </table>
@@ -599,3 +595,6 @@ textplot::textplot_dependencyparser(sent_depend,
 ```
 
 ![](README_files/figure-markdown_github/unnamed-chunk-22-1.png)
+
+Summary
+-------
