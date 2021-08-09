@@ -6,7 +6,7 @@ output:
 
 # nlp with r: some notes
 
-A summary of some (more upstream) NLP workflows -- mostly using the [udpipe](https://github.com/bnosac/udpipe) and [corpus](https://github.com/patperry/r-corpus) packages.
+A summary of some (more upstream) NLP workflows -- mostly using the [udpipe](https://github.com/bnosac/udpipe) and [corpus](https://github.com/patperry/r-corpus) packages.  Mostly notes to self.
 
 ---
 
@@ -306,6 +306,8 @@ both <- do.call(rbind, list(embedding.docs, embedding.words))
 ```
 
 
+> doc2vec is a powerful NLP tool because it projects documents and terms in the same embedding space.  
+
 ```{r}
 predict(model.d2v, 'Biden', 
         type = "nearest",
@@ -349,7 +351,7 @@ jrb_sentences0 %>% head() %>% knitr::kable()
 
 ### Visualizing dependencies
 
-```{r fig.height=4.75, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE}
 sentence <- "The green giant wishes for Jackie-boy only good things"
 sent_depend <- udpipe::udpipe(udmodel, x = sentence)
 

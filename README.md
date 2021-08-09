@@ -3,7 +3,8 @@ nlp with r: some notes
 
 A summary of some (more upstream) NLP workflows – mostly using the
 [udpipe](https://github.com/bnosac/udpipe) and
-[corpus](https://github.com/patperry/r-corpus) packages.
+[corpus](https://github.com/patperry/r-corpus) packages. Mostly notes to
+self.
 
 ------------------------------------------------------------------------
 
@@ -46,11 +47,11 @@ news <- quicknews::qnews_extract_article(url = meta$link[1:20],
 strwrap(news$text[10], width = 60)[1:5]
 ```
 
-    ## [1] "Remember moderate Democrat Joe Biden’s lackluster 2020"     
-    ## [2] "Campaign, which willingly reduced public appearances and"   
-    ## [3] "probing press questions, citing COVID concerns? With little"
-    ## [4] "opportunity to assess aging Biden, did we really know his"  
-    ## [5] "intentions? Did it matter? Was he actually the likeable"
+    ## [1] "(CNN)Lawmakers and top climate officials in President Joe"
+    ## [2] "Biden's administration sounded the alarm on Monday in"    
+    ## [3] "response to a new report from the United Nations'"        
+    ## [4] "Intergovernmental Panel on Climate Change, urging nations"
+    ## [5] "to swiftly limit global warming to 1.5 degrees Celsius."
 
 ### PubMed abstracts
 
@@ -96,13 +97,8 @@ tweets <-  rtweet::search_tweets(q = '#Jan6',
 strwrap(tweets$text[1], width = 60)
 ```
 
-    ## [1] "@AssemblyRoomUSA @MasterOfPsy @JoeBiden @humanrights1st A"  
-    ## [2] "lame attempt to distract. You know you’ve been caught, Jim."
-    ## [3] "@Jim_Jordan #Jan6 will haunt you forever. The @FBI is"      
-    ## [4] "lurking. #Lackey @RepSwalwell @RepAdamSchiff @PostOpinions" 
-    ## [5] "@nytopinion @SpeakerPelosi @DevinNunes — you too Devin."    
-    ## [6] "Only a matter of time. @JKSuicideWatch @maddow"             
-    ## [7] "https://t.co/Qv3qpYGbVF https://t.co/tbCOLW29xb"
+    ## [1] "Yes, #Kentucky, Rand Paul is an asshat... #GOP #Antivax"   
+    ## [2] "#Obstructionist #Jan6 #NeverForget https://t.co/yrfaaQio1P"
 
 Processing
 ----------
@@ -290,14 +286,14 @@ collocations0 %>%
   knitr::kable()
 ```
 
-| keyword      |  freq|     pmi|
-|:-------------|-----:|-------:|
-| in late July |     3|  10.622|
-| he wants     |     3|   6.796|
-| get out      |     4|   6.601|
-| red states   |     5|   9.302|
-| might not    |     4|   7.252|
-| if you       |     5|   7.512|
+| keyword                  |  freq|     pmi|
+|:-------------------------|-----:|-------:|
+| the Biden administration |     4|  10.207|
+| aimed at                 |     4|   8.050|
+| The soul                 |     3|   5.430|
+| the most powerful man in |     3|   5.921|
+| powerful man             |     3|  10.571|
+| the White House          |    15|   8.773|
 
 ### Noun phrases
 
@@ -326,13 +322,13 @@ nps1 %>%
   knitr::kable()
 ```
 
-| keyword            | pattern |  ngram|    n|
-|:-------------------|:--------|------:|----:|
-| One\_bill          | AN      |      2|    1|
-| approval\_ratings  | NN      |      2|    2|
-| jobs\_numbers      | NN      |      2|    1|
-| Senate\_filibuster | NN      |      2|    1|
-| many\_party        | AN      |      2|    1|
+| keyword               | pattern |  ngram|    n|
+|:----------------------|:--------|------:|----:|
+| partisan\_fray        | AN      |      2|    1|
+| coronavirus\_pandemic | NN      |      2|    3|
+| trillion\_package     | AN      |      2|    3|
+| third\_place          | AN      |      2|    1|
+| most\_automakers      | AN      |      2|    1|
 
 ### Tokenizing multiword expressions
 
@@ -385,13 +381,13 @@ str(dtm)
 ```
 
     ## Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-    ##   ..@ i       : int [1:5879] 0 1 2 6 7 8 9 10 12 13 ...
-    ##   ..@ p       : int [1:3399] 0 15 34 54 67 85 103 106 110 111 ...
-    ##   ..@ Dim     : int [1:2] 20 3398
+    ##   ..@ i       : int [1:6647] 0 2 3 4 5 6 7 8 9 10 ...
+    ##   ..@ p       : int [1:3670] 0 17 37 57 72 89 106 110 114 115 ...
+    ##   ..@ Dim     : int [1:2] 20 3669
     ##   ..@ Dimnames:List of 2
     ##   .. ..$ : chr [1:20] "1" "10" "11" "12" ...
-    ##   .. ..$ : chr [1:3398] "-" "," "." "\"" ...
-    ##   ..@ x       : num [1:5879] 6 2 10 4 2 9 1 6 2 5 ...
+    ##   .. ..$ : chr [1:3669] "-" "," "." "\"" ...
+    ##   ..@ x       : num [1:6647] 6 2 10 3 1 10 4 9 2 1 ...
     ##   ..@ factors : list()
 
 ### Rebuilding text
@@ -431,23 +427,26 @@ embedding.docs <- as.matrix(model.d2v,   which = "docs")
 both <- do.call(rbind, list(embedding.docs, embedding.words))
 ```
 
+> doc2vec is a powerful NLP tool because it projects documents and terms
+> in the same embedding space.
+
 ``` r
 predict(model.d2v, 'Biden', 
         type = "nearest",
         which = "word2word")[[1]]
 ```
 
-    ##    term1           term2 similarity rank
-    ## 1  Biden           upend  0.9595785    1
-    ## 2  Biden approval_rating  0.9374418    2
-    ## 3  Biden          decide  0.9346738    3
-    ## 4  Biden            Jill  0.9337398    4
-    ## 5  Biden            poll  0.9299915    5
-    ## 6  Biden            come  0.9280250    6
-    ## 7  Biden            send  0.9277644    7
-    ## 8  Biden            mean  0.9272794    8
-    ## 9  Biden           stand  0.9263697    9
-    ## 10 Biden             pal  0.9262639   10
+    ##    term1    term2 similarity rank
+    ## 1  Biden      ask  0.9076957    1
+    ## 2  Biden thousand  0.8601214    2
+    ## 3  Biden    image  0.8452662    3
+    ## 4  Biden        ;  0.8385843    4
+    ## 5  Biden        ,  0.8313099    5
+    ## 6  Biden     know  0.8297321    6
+    ## 7  Biden   before  0.8276444    7
+    ## 8  Biden     left  0.8265744    8
+    ## 9  Biden   States  0.8222479    9
+    ## 10 Biden    canot  0.8066943   10
 
 Search
 ------
