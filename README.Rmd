@@ -33,7 +33,7 @@ meta <- quicknews::qnews_get_newsmeta('joe biden')
 news <- quicknews::qnews_extract_article(url = meta$link[1:20],
                                          cores = 7)
 
-strwrap(news$text[10], width = 60)[1:5]
+strwrap(news$text[2], width = 60)[1:5]
 ```
 
 
@@ -364,7 +364,7 @@ jrb_sentences0 %>% head() %>% knitr::kable()
 ### Visualizing dependencies
 
 ```{r message=FALSE, warning=FALSE}
-sentence <- "The green giant wishes for Jackie-boy only peace"
+sentence <- "The green giant wished for Jackie-boy only peace."
 sent_depend <- udpipe::udpipe(udmodel, x = sentence)
 
 textplot::textplot_dependencyparser(sent_depend, 

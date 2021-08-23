@@ -43,14 +43,14 @@ meta <- quicknews::qnews_get_newsmeta('joe biden')
 news <- quicknews::qnews_extract_article(url = meta$link[1:20],
                                          cores = 7)
 
-strwrap(news$text[10], width = 60)[1:5]
+strwrap(news$text[2], width = 60)[1:5]
 ```
 
-    ## [1] "Joe Biden has no interest in your facts. Those are from" 
-    ## [2] "four or five days ago. Or, actually, two. In his"        
-    ## [3] "contentious interview with ABC’s George Stephanopoulos —"
-    ## [4] "his sentences jumbled together, alternately rambling and"
-    ## [5] "insisting with vociferous certainty things that were not"
+    ## [1] "Joe Biden has been attacked by conservative pundits for"  
+    ## [2] "appearing to stumble when naming the director of the"     
+    ## [3] "Federal Emergency Management Agency (FEMA) during a press"
+    ## [4] "briefing on Sunday. Biden appeared to hesitate when"      
+    ## [5] "addressing FEMA director Deanne Criswell during a press"
 
 ### PubMed abstracts
 
@@ -96,10 +96,14 @@ tweets <-  rtweet::search_tweets(q = '#Jan6',
 strwrap(tweets$text[1], width = 60)
 ```
 
-    ## [1] "@just_security @justinhendrix While we wait for @Jim_Jordan"
-    ## [2] "to be indicted for his role in instigating the #Jan6 attack"
-    ## [3] "against Congress, we can look forward to electing an"       
-    ## [4] "honorable person to his seat: @Sites4Congress"
+    ## [1] "Good. The far Right has behaved traitorously in labeling"  
+    ## [2] "Babbitt some kind of martyr. It's this officer and their"  
+    ## [3] "family who have made the real sacrifice. We thank them for"
+    ## [4] "their service and stand with them always."                 
+    ## [5] ""                                                          
+    ## [6] "#Jan6 #InformationWarfare #Trumpistan"                     
+    ## [7] ""                                                          
+    ## [8] "https://t.co/6JHcGTBfPb"
 
 ## Processing
 
@@ -197,9 +201,9 @@ head(vocab)
     ## 1: Foreign         2        1
     ## 2:  policy        24        6
     ## 3: experts         3        1
-    ## 4:     are        47       12
-    ## 5:  asking         2        2
-    ## 6:     how        12        5
+    ## 4:     are        56       14
+    ## 5:  asking         1        1
+    ## 6:     how        12        6
 
 ## Annotation
 
@@ -276,14 +280,14 @@ collocations0 %>%
   knitr::kable()
 ```
 
-| keyword                       | freq |    pmi |
-|:------------------------------|-----:|-------:|
-| Cillizza will delve a         |    3 |  5.834 |
-| weekly YouTube                |    3 | 11.947 |
-| trying to                     |    5 |  5.439 |
-| In each episode               |    3 | 11.944 |
-| deeper into the surreal world |    3 |  9.824 |
-| will delve a little           |    3 | 11.942 |
+| keyword           | freq |    pmi |
+|:------------------|-----:|-------:|
+| tax rate          |    3 |  8.423 |
+| his party         |    3 |  6.652 |
+| budget resolution |    3 | 10.539 |
+| Afghanistan exit  |    3 |  6.954 |
+| I think           |    4 |  6.138 |
+| Bernie Sanders    |    3 | 11.954 |
 
 ### Noun phrases
 
@@ -312,13 +316,13 @@ nps1 %>%
   knitr::kable()
 ```
 
-| keyword                        | pattern | ngram |   n |
-|:-------------------------------|:--------|------:|----:|
-| Durham_quick                   | NN      |     2 |   1 |
-| Olivia_Troye                   | NN      |     2 |   1 |
-| Rick_Flagg                     | NN      |     2 |   1 |
-| transit_point_for_the_refugees | NNPDN   |     5 |   1 |
-| Rep.\_Anna_Eshoo               | NNN     |     3 |   1 |
+| keyword                      | pattern | ngram |   n |
+|:-----------------------------|:--------|------:|----:|
+| unforgivable_failure         | AN      |     2 |   1 |
+| one_lives                    | AN      |     2 |   1 |
+| companywide_memo             | NN      |     2 |   1 |
+| square_foot_White_House_East | NNNNN   |     5 |   1 |
+| own_home_with_Summerfest     | ANPN    |     4 |   1 |
 
 ### Tokenizing multiword expressions
 
@@ -371,13 +375,13 @@ str(dtm)
 ```
 
     ## Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-    ##   ..@ i       : int [1:4641] 0 1 2 3 5 6 8 9 10 11 ...
-    ##   ..@ p       : int [1:2588] 0 14 33 43 50 69 80 82 84 85 ...
-    ##   ..@ Dim     : int [1:2] 19 2587
+    ##   ..@ i       : int [1:4641] 0 1 2 3 4 6 7 8 9 10 ...
+    ##   ..@ p       : int [1:2554] 0 15 34 43 51 70 81 82 83 84 ...
+    ##   ..@ Dim     : int [1:2] 19 2553
     ##   ..@ Dimnames:List of 2
     ##   .. ..$ : chr [1:19] "1" "10" "11" "12" ...
-    ##   .. ..$ : chr [1:2587] "-" "," ":" "?" ...
-    ##   ..@ x       : num [1:4641] 4 10 2 1 2 1 4 2 2 2 ...
+    ##   .. ..$ : chr [1:2553] "-" "," ":" "?" ...
+    ##   ..@ x       : num [1:4641] 4 10 1 2 1 2 2 1 2 2 ...
     ##   ..@ factors : list()
 
 ### Rebuilding text
@@ -389,11 +393,11 @@ new_text <- data.table::setDT(annotation0)[, list(text = paste(newness, collapse
 strwrap(new_text$text[5], width = 60)[1:5]
 ```
 
-    ## [1] "Nrplus member article J oe Biden have do many_things in he" 
-    ## [2] "statement about Afghanistan over the last_week , from he"   
-    ## [3] "speech last Monday to he brief_press_conference Sunday"     
-    ## [4] "afternoon . He' critique afghan leader , blame Donald Trump"
-    ## [5] ", deny he could have know what would happen , and paint"
+    ## [1] "not so many_weeks ago , a person who doesnot like I or this"
+    ## [2] "column write a email to my boss at the tv station in a"     
+    ## [3] "attempt to get I into trouble . he say , \" you know he' a" 
+    ## [4] "republican_right ? why be he allow to do the news ? \" now" 
+    ## [5] "we can dissect that short_message_in_several_ways but let I"
 
 ## doc2vec
 
@@ -425,17 +429,17 @@ predict(model.d2v, 'Biden',
         which = "word2word")[[1]]
 ```
 
-    ##    term1     term2 similarity rank
-    ## 1  Biden      week  0.9275486    1
-    ## 2  Biden     blame  0.9252347    2
-    ## 3  Biden   Sánchez  0.9113157    3
-    ## 4  Biden         )  0.9069669    4
-    ## 5  Biden      time  0.9028502    5
-    ## 6  Biden President  0.8952557    6
-    ## 7  Biden   Bongino  0.8931653    7
-    ## 8  Biden       Joe  0.8885962    8
-    ## 9  Biden       CNN  0.8841720    9
-    ## 10 Biden       Dan  0.8729199   10
+    ##    term1    term2 similarity rank
+    ## 1  Biden   Sunday  0.9243757    1
+    ## 2  Biden     call  0.9094791    2
+    ## 3  Biden  stumble  0.9069743    3
+    ## 4  Biden director  0.9023297    4
+    ## 5  Biden Criswell  0.8947548    5
+    ## 6  Biden     FEMA  0.8937930    6
+    ## 7  Biden   during  0.8849266    7
+    ## 8  Biden      she  0.8835037    8
+    ## 9  Biden    speak  0.8802032    9
+    ## 10 Biden  Sánchez  0.8786803   10
 
 ## Search
 
@@ -453,14 +457,14 @@ egs <- PubmedMTK::pmtk_locate_term(text = tokens,
 egs %>% head() %>% knitr::kable()
 ```
 
-| doc_id | lhs                                                              | instance  | rhs                                                                 |
-|:-------|:-----------------------------------------------------------------|:----------|:--------------------------------------------------------------------|
-| 1.2    | to visit him in Kabul was the then-senator from Delaware ,       | Joe Biden | .                                                                   |
-| 1.6    | " What have they done with the real                              | Joe Biden | ?                                                                   |
-| 1.68   | " I think                                                        | Joe Biden | sees Afghanistan as a distraction from the defining fight that he’s |
-| 2.1    | ( CNN )                                                          | Joe Biden | believes that you don’t care about Afghanistan .                    |
-| 3.1    | op-ed in one of Britain’s largest newspapers has taken aim at    | Joe Biden | , calling the 78-year-old president " exhausted " and " too         |
-| 6.16   | this because I’m about to say something nice about our president | Joe Biden | .                                                                   |
+| doc_id | lhs                                                        | instance  | rhs                                                                     |
+|:-------|:-----------------------------------------------------------|:----------|:------------------------------------------------------------------------|
+| 1.2    | to visit him in Kabul was the then-senator from Delaware , | Joe Biden | .                                                                       |
+| 1.6    | " What have they done with the real                        | Joe Biden | ?                                                                       |
+| 1.68   | " I think                                                  | Joe Biden | sees Afghanistan as a distraction from the defining fight that he’s     |
+| 2.1    | NA                                                         | Joe Biden | has been attacked by conservative pundits for appearing to stumble when |
+| 2.8    | "                                                          | Joe Biden | appears to struggle to remember his FEMA administrator’s name , "       |
+| 2.10   | " Did                                                      | Joe Biden | just forget his FEMA director’s name ? "                                |
 
 ### Sentences containing X
 
@@ -488,7 +492,7 @@ jrb_sentences0 %>% head() %>% knitr::kable()
 ### Visualizing dependencies
 
 ``` r
-sentence <- "The green giant wishes for Jackie-boy only peace"
+sentence <- "The green giant wished for Jackie-boy only peace."
 sent_depend <- udpipe::udpipe(udmodel, x = sentence)
 
 textplot::textplot_dependencyparser(sent_depend, 
