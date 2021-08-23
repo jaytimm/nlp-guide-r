@@ -335,8 +335,11 @@ predict(model.d2v, 'Biden',
 > Based on the `corpus::text_locate` function.
 
 ```{r}
-egs <- PubmedMTK::pmtk_locate_term(text = tokens,
-                                   doc_id = names(tokens),
+tokens2 <- corpus::text_tokens(news$text,
+              filter = corpus::text_filter(map_case = FALSE))
+
+egs <- PubmedMTK::pmtk_locate_term(text = tokens2,
+                                   doc_id = 1:length(tokens2),
                                    term = c('joe biden'),
                                    stem = F,
                                    window = 10)

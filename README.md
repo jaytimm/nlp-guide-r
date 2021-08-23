@@ -198,10 +198,10 @@ head(vocab)
 ```
 
     ##      token text_freq doc_freq
-    ## 1: Foreign         2        1
+    ## 1: Foreign         3        2
     ## 2:  policy        24        6
-    ## 3: experts         3        1
-    ## 4:     are        56       14
+    ## 3: experts         4        2
+    ## 4:     are        56       13
     ## 5:  asking         1        1
     ## 6:     how        12        6
 
@@ -280,14 +280,14 @@ collocations0 %>%
   knitr::kable()
 ```
 
-| keyword           | freq |    pmi |
-|:------------------|-----:|-------:|
-| tax rate          |    3 |  8.423 |
-| his party         |    3 |  6.652 |
-| budget resolution |    3 | 10.539 |
-| Afghanistan exit  |    3 |  6.954 |
-| I think           |    4 |  6.138 |
-| Bernie Sanders    |    3 | 11.954 |
+| keyword                   | freq |    pmi |
+|:--------------------------|-----:|-------:|
+| corporate tax             |    3 |  8.905 |
+| could be                  |    3 |  5.135 |
+| you failed                |    5 |  6.213 |
+| look like                 |    3 |  8.436 |
+| when we                   |    3 |  5.511 |
+| national security adviser |    4 | 11.018 |
 
 ### Noun phrases
 
@@ -316,13 +316,13 @@ nps1 %>%
   knitr::kable()
 ```
 
-| keyword                      | pattern | ngram |   n |
-|:-----------------------------|:--------|------:|----:|
-| unforgivable_failure         | AN      |     2 |   1 |
-| one_lives                    | AN      |     2 |   1 |
-| companywide_memo             | NN      |     2 |   1 |
-| square_foot_White_House_East | NNNNN   |     5 |   1 |
-| own_home_with_Summerfest     | ANPN    |     4 |   1 |
+| keyword                | pattern | ngram |   n |
+|:-----------------------|:--------|------:|----:|
+| first_half-year        | AN      |     2 |   1 |
+| Hamid_Karzai_Airport   | NNN     |     3 |   1 |
+| Biden’s_foreign_policy | NAN     |     3 |   1 |
+| income_tax_credit      | NNN     |     3 |   1 |
+| chaotic_US_exit        | ANN     |     3 |   1 |
 
 ### Tokenizing multiword expressions
 
@@ -375,13 +375,13 @@ str(dtm)
 ```
 
     ## Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-    ##   ..@ i       : int [1:4641] 0 1 2 3 4 6 7 8 9 10 ...
-    ##   ..@ p       : int [1:2554] 0 15 34 43 51 70 81 82 83 84 ...
-    ##   ..@ Dim     : int [1:2] 19 2553
+    ##   ..@ i       : int [1:4845] 0 2 3 5 6 7 8 9 10 11 ...
+    ##   ..@ p       : int [1:2672] 0 15 34 44 52 71 83 85 87 88 ...
+    ##   ..@ Dim     : int [1:2] 19 2671
     ##   ..@ Dimnames:List of 2
     ##   .. ..$ : chr [1:19] "1" "10" "11" "12" ...
-    ##   .. ..$ : chr [1:2553] "-" "," ":" "?" ...
-    ##   ..@ x       : num [1:4641] 4 10 1 2 1 2 2 1 2 2 ...
+    ##   .. ..$ : chr [1:2671] "-" "," ":" "?" ...
+    ##   ..@ x       : num [1:4845] 4 2 1 2 2 1 2 2 4 2 ...
     ##   ..@ factors : list()
 
 ### Rebuilding text
@@ -429,17 +429,17 @@ predict(model.d2v, 'Biden',
         which = "word2word")[[1]]
 ```
 
-    ##    term1    term2 similarity rank
-    ## 1  Biden   Sunday  0.9243757    1
-    ## 2  Biden     call  0.9094791    2
-    ## 3  Biden  stumble  0.9069743    3
-    ## 4  Biden director  0.9023297    4
-    ## 5  Biden Criswell  0.8947548    5
-    ## 6  Biden     FEMA  0.8937930    6
-    ## 7  Biden   during  0.8849266    7
-    ## 8  Biden      she  0.8835037    8
-    ## 9  Biden    speak  0.8802032    9
-    ## 10 Biden  Sánchez  0.8786803   10
+    ##    term1     term2 similarity rank
+    ## 1  Biden    appear  0.9466130    1
+    ## 2  Biden     speak  0.9162854    2
+    ## 3  Biden   Bongino  0.9145614    3
+    ## 4  Biden   Sánchez  0.9041641    4
+    ## 5  Biden  director  0.9027559    5
+    ## 6  Biden    speech  0.9002235    6
+    ## 7  Biden last_week  0.8999076    7
+    ## 8  Biden    decide  0.8962178    8
+    ## 9  Biden         )  0.8948097    9
+    ## 10 Biden        he  0.8922988   10
 
 ## Search
 
@@ -448,8 +448,11 @@ predict(model.d2v, 'Biden',
 > Based on the `corpus::text_locate` function.
 
 ``` r
-egs <- PubmedMTK::pmtk_locate_term(text = tokens,
-                                   doc_id = names(tokens),
+tokens2 <- corpus::text_tokens(news$text,
+              filter = corpus::text_filter(map_case = FALSE))
+
+egs <- PubmedMTK::pmtk_locate_term(text = tokens2,
+                                   doc_id = 1:length(tokens2),
                                    term = c('joe biden'),
                                    stem = F,
                                    window = 10)
@@ -457,14 +460,14 @@ egs <- PubmedMTK::pmtk_locate_term(text = tokens,
 egs %>% head() %>% knitr::kable()
 ```
 
-| doc_id | lhs                                                        | instance  | rhs                                                                     |
-|:-------|:-----------------------------------------------------------|:----------|:------------------------------------------------------------------------|
-| 1.2    | to visit him in Kabul was the then-senator from Delaware , | Joe Biden | .                                                                       |
-| 1.6    | " What have they done with the real                        | Joe Biden | ?                                                                       |
-| 1.68   | " I think                                                  | Joe Biden | sees Afghanistan as a distraction from the defining fight that he’s     |
-| 2.1    | NA                                                         | Joe Biden | has been attacked by conservative pundits for appearing to stumble when |
-| 2.8    | "                                                          | Joe Biden | appears to struggle to remember his FEMA administrator’s name , "       |
-| 2.10   | " Did                                                      | Joe Biden | just forget his FEMA director’s name ? "                                |
+| doc_id | lhs                                                         | instance  | rhs                                                                     |
+|-------:|:------------------------------------------------------------|:----------|:------------------------------------------------------------------------|
+|      1 | to visit him in Kabul was the then-senator from Delaware ,  | Joe Biden | . " One of his really great qualities , I thought                       |
+|      1 | President Trump . " What have they done with the real       | Joe Biden | ? And who is this guy up there now ? "                                  |
+|      1 | reengage with America’s allies around the world . " I think | Joe Biden | sees Afghanistan as a distraction from the defining fight that he’s     |
+|      2 | NA                                                          | Joe Biden | has been attacked by conservative pundits for appearing to stumble when |
+|      2 | he said about 20 seconds into the live conference . "       | Joe Biden | appears to struggle to remember his FEMA administrator’s name , "       |
+|      2 | test now , hearings in Congress now . " " Did               | Joe Biden | just forget his FEMA director’s name ? " managing editor of             |
 
 ### Sentences containing X
 
