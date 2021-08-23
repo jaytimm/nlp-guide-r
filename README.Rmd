@@ -131,6 +131,18 @@ tokens_df %>%  slice(1:10)
 
 
 
+### Vocabulary
+
+```{r}
+vocab <- tokens_df[, list(text_freq = .N, 
+                          doc_freq = length(unique(doc_id))), 
+              by = list(token)]
+
+head(vocab)
+```
+
+
+
 ## Annotation
 
 ```{r include=FALSE}
@@ -352,7 +364,7 @@ jrb_sentences0 %>% head() %>% knitr::kable()
 ### Visualizing dependencies
 
 ```{r message=FALSE, warning=FALSE}
-sentence <- "The green giant wishes for Jackie-boy only good things"
+sentence <- "The green giant wishes for Jackie-boy only peace"
 sent_depend <- udpipe::udpipe(udmodel, x = sentence)
 
 textplot::textplot_dependencyparser(sent_depend, 

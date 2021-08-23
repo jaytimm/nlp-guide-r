@@ -1,5 +1,4 @@
-nlp with r: some notes
-======================
+# nlp with r: some notes
 
 A summary of some (more upstream) NLP workflows – mostly using the
 [udpipe](https://github.com/bnosac/udpipe) and
@@ -17,6 +16,7 @@ self.
         -   [Sentence splitting](#sentence-splitting)
         -   [Tokenization](#tokenization)
         -   [Tokens to data frame](#tokens-to-data-frame)
+        -   [Vocabulary](#vocabulary)
     -   [Annotation](#annotation)
     -   [Multiword expressions](#multiword-expressions)
         -   [Collocations](#collocations)
@@ -33,8 +33,7 @@ self.
         -   [Visualizing dependencies](#visualizing-dependencies)
     -   [Summary](#summary)
 
-Quick live text
----------------
+## Quick live text
 
 ### Online news articles
 
@@ -47,11 +46,11 @@ news <- quicknews::qnews_extract_article(url = meta$link[1:20],
 strwrap(news$text[10], width = 60)[1:5]
 ```
 
-    ## [1] "(CNN)Lawmakers and top climate officials in President Joe"
-    ## [2] "Biden's administration sounded the alarm on Monday in"    
-    ## [3] "response to a new report from the United Nations'"        
-    ## [4] "Intergovernmental Panel on Climate Change, urging nations"
-    ## [5] "to swiftly limit global warming to 1.5 degrees Celsius."
+    ## [1] "Joe Biden has no interest in your facts. Those are from" 
+    ## [2] "four or five days ago. Or, actually, two. In his"        
+    ## [3] "contentious interview with ABC’s George Stephanopoulos —"
+    ## [4] "his sentences jumbled together, alternately rambling and"
+    ## [5] "insisting with vociferous certainty things that were not"
 
 ### PubMed abstracts
 
@@ -60,7 +59,7 @@ pmids <- PubmedMTK::pmtk_search_pubmed(search_term = 'medical marijuana',
                                        fields = c('TIAB','MH'))
 ```
 
-    ## [1] "medical marijuana[TIAB] OR medical marijuana[MH]: 2206 records"
+    ## [1] "medical marijuana[TIAB] OR medical marijuana[MH]: 2224 records"
 
 ``` r
 abstracts <- PubmedMTK::pmtk_get_records2(pmids = pmids$pmid[1:10], 
@@ -71,16 +70,16 @@ abstracts <- PubmedMTK::pmtk_get_records2(pmids = pmids$pmid[1:10],
 strwrap(abstracts[[1]]$abstract, width = 60)[1:10]
 ```
 
-    ##  [1] "People living with HIV (PLWH) experience higher rates of"   
-    ##  [2] "comorbid chronic pain conditions compared to the general"   
-    ##  [3] "population. Managing HIV and chronic pain, two stigmatized" 
-    ##  [4] "health conditions, can exacerbate physical and"             
-    ##  [5] "psychological suffering. The current qualitative study was" 
-    ##  [6] "designed to increase our understanding of the experience of"
-    ##  [7] "living with HIV and chronic pain. Twenty participants were" 
-    ##  [8] "recruited from a hospital-based immunology center to"       
-    ##  [9] "participate in individual in-depth qualitative interviews." 
-    ## [10] "The interviews focused on the experience of living with (or"
+    ##  [1] "The authors sought to estimate the prevalence of"           
+    ##  [2] "past-12-month and lifetime cannabis use and cannabis use"   
+    ##  [3] "disorder among U.S. veterans; to describe demographic,"     
+    ##  [4] "substance use disorder, and psychiatric disorder correlates"
+    ##  [5] "of nonmedical cannabis use and cannabis use disorder; and"  
+    ##  [6] "to explore differences in cannabis use and cannabis use"    
+    ##  [7] "disorder prevalence among veterans in states with and"      
+    ##  [8] "without medical marijuana laws. Participants were 3,119"    
+    ##  [9] "respondents in the 2012-2013 National Epidemiologic Survey" 
+    ## [10] "on Alcohol and Related Conditions-III (NESARC-III) who"
 
 ### Tweets
 
@@ -97,11 +96,12 @@ tweets <-  rtweet::search_tweets(q = '#Jan6',
 strwrap(tweets$text[1], width = 60)
 ```
 
-    ## [1] "Yes, #Kentucky, Rand Paul is an asshat... #GOP #Antivax"   
-    ## [2] "#Obstructionist #Jan6 #NeverForget https://t.co/yrfaaQio1P"
+    ## [1] "@just_security @justinhendrix While we wait for @Jim_Jordan"
+    ## [2] "to be indicted for his role in instigating the #Jan6 attack"
+    ## [3] "against Congress, we can look forward to electing an"       
+    ## [4] "honorable person to his seat: @Sites4Congress"
 
-Processing
-----------
+## Processing
 
 ### Sentence splitting
 
@@ -117,44 +117,14 @@ sentences <- PubmedMTK::pmtk_split_sentences(text = news$text,
 sentences %>% head() %>% knitr::kable()
 ```
 
-<table>
-<colgroup>
-<col style="width: 2%" />
-<col style="width: 97%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">doc_id</th>
-<th style="text-align: left;">text</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">1.1</td>
-<td style="text-align: left;">WILMINGTON, Del.</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">1.2</td>
-<td style="text-align: left;">(AP) — After more than six months of work combating the coronavirus, negotiating a bipartisan infrastructure bill and repairing the U.S. image abroad, President Joe Biden should be heading out on vacation and a traditional August break from Washington.</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">1.3</td>
-<td style="text-align: left;">But with legislative work on the infrastructure bill keeping the Senate in session for a second straight weekend, and likely through next week, Biden hasn’t gone far — just home to Wilmington, Delaware, as he has done most weekends since taking office.</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">1.4</td>
-<td style="text-align: left;">“Every president is always working no matter where they are,” White House press secretary Jen Psaki said, explaining that presidents can’t ever really tune out.</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">1.5</td>
-<td style="text-align: left;">Biden will spend some of next week at the White House before he decamps again, either for Delaware — he also owns a home in Rehoboth Beach — or Camp David, the official presidential retreat in Maryland’s Catoctin Mountains, Psaki said.</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">1.6</td>
-<td style="text-align: left;">The modern president is never completely free from work, tethered by secure telephone lines and other technology with a coterie of top aides and advisers always close by.</td>
-</tr>
-</tbody>
-</table>
+| doc_id | text                                                                                                                                                                                                                             |
+|:-------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1.1    | Foreign policy experts are asking how decades of foreign policy experience could have led President Biden to oversee such a chaotic withdrawal.                                                                                  |
+| 1.2    | In January 2002, when the U.S. Embassy in Afghanistan reopened for the first time since 1989, Ambassador Ryan Crocker said the first member of Congress to visit him in Kabul was the then-senator from Delaware, Joe Biden.     |
+| 1.3    | “One of his really great qualities, I thought, was his driving need to see things for himself … and I just really respected that,” Crocker said, pointing out that Biden also visited Iraq many times.                           |
+| 1.4    | Crocker had considered the president an old-school internationalist, in the vein of presidents going back to World War II who believed in U.S. leadership on the global stage and spearheaded large international organizations. |
+| 1.5    | But with the havoc unfolding in Afghanistan, Crocker says he can no longer make sense of the man he once thought would restore American credibility and international order after President Trump.                               |
+| 1.6    | "What have they done with the real Joe Biden?                                                                                                                                                                                    |
 
 ### Tokenization
 
@@ -186,7 +156,11 @@ names(tokens) <-sentences$doc_id
 tokens[[1]]
 ```
 
-    ## [1] "WILMINGTON" ","          "Del"        "."
+    ##  [1] "Foreign"    "policy"     "experts"    "are"        "asking"    
+    ##  [6] "how"        "decades"    "of"         "foreign"    "policy"    
+    ## [11] "experience" "could"      "have"       "led"        "President" 
+    ## [16] "Biden"      "to"         "oversee"    "such"       "a"         
+    ## [21] "chaotic"    "withdrawal" "."
 
 ### Tokens to data frame
 
@@ -197,20 +171,37 @@ tokens_df <- PubmedMTK::pmtk_cast_tokens(tokens)
 tokens_df %>%  slice(1:10)
 ```
 
-    ##     doc_id sentence_id token_id      token
-    ##  1:      1           1        1 WILMINGTON
-    ##  2:      1           1        2          ,
-    ##  3:      1           1        3        Del
-    ##  4:      1           1        4          .
-    ##  5:      1           2        1          (
-    ##  6:      1           2        2         AP
-    ##  7:      1           2        3          )
-    ##  8:      1           2        4          —
-    ##  9:      1           2        5      After
-    ## 10:      1           2        6       more
+    ##     doc_id sentence_id token_id   token
+    ##  1:      1           1        1 Foreign
+    ##  2:      1           1        2  policy
+    ##  3:      1           1        3 experts
+    ##  4:      1           1        4     are
+    ##  5:      1           1        5  asking
+    ##  6:      1           1        6     how
+    ##  7:      1           1        7 decades
+    ##  8:      1           1        8      of
+    ##  9:      1           1        9 foreign
+    ## 10:      1           1       10  policy
 
-Annotation
-----------
+### Vocabulary
+
+``` r
+vocab <- tokens_df[, list(text_freq = .N, 
+                          doc_freq = length(unique(doc_id))), 
+              by = list(token)]
+
+head(vocab)
+```
+
+    ##      token text_freq doc_freq
+    ## 1: Foreign         2        1
+    ## 2:  policy        24        6
+    ## 3: experts         3        1
+    ## 4:     are        47       12
+    ## 5:  asking         2        2
+    ## 6:     how        12        5
+
+## Annotation
 
 ``` r
 setwd(paste0(udmodel_dir, 'model'))
@@ -255,17 +246,16 @@ annotation %>%
   knitr::kable()
 ```
 
-| doc\_id |  sentence\_id| token\_id | token      | lemma      | upos  | xpos  |
-|:--------|-------------:|:----------|:-----------|:-----------|:------|:------|
-| 1       |             1| 1         | WILMINGTON | WILMINGTON | PROPN | NNP   |
-| 1       |             1| 2         | ,          | ,          | PUNCT | ,     |
-| 1       |             1| 3         | Del        | del        | PROPN | NNP   |
-| 1       |             1| 4         | .          | .          | PUNCT | .     |
-| 1       |             2| 1         | (          | (          | PUNCT | -LRB- |
-| 1       |             2| 2         | AP         | ap         | NOUN  | NN    |
+| doc_id | sentence_id | token_id | token   | lemma   | upos | xpos |
+|:-------|------------:|:---------|:--------|:--------|:-----|:-----|
+| 1      |           1 | 1        | Foreign | foreign | ADJ  | JJ   |
+| 1      |           1 | 2        | policy  | policy  | NOUN | NN   |
+| 1      |           1 | 3        | experts | expert  | NOUN | NNS  |
+| 1      |           1 | 4        | are     | be      | AUX  | VBP  |
+| 1      |           1 | 5        | asking  | ask     | VERB | VBG  |
+| 1      |           1 | 6        | how     | how     | ADV  | WRB  |
 
-Multiword expressions
----------------------
+## Multiword expressions
 
 ### Collocations
 
@@ -286,14 +276,14 @@ collocations0 %>%
   knitr::kable()
 ```
 
-| keyword                  |  freq|     pmi|
-|:-------------------------|-----:|-------:|
-| the Biden administration |     4|  10.207|
-| aimed at                 |     4|   8.050|
-| The soul                 |     3|   5.430|
-| the most powerful man in |     3|   5.921|
-| powerful man             |     3|  10.571|
-| the White House          |    15|   8.773|
+| keyword                       | freq |    pmi |
+|:------------------------------|-----:|-------:|
+| Cillizza will delve a         |    3 |  5.834 |
+| weekly YouTube                |    3 | 11.947 |
+| trying to                     |    5 |  5.439 |
+| In each episode               |    3 | 11.944 |
+| deeper into the surreal world |    3 |  9.824 |
+| will delve a little           |    3 | 11.942 |
 
 ### Noun phrases
 
@@ -322,13 +312,13 @@ nps1 %>%
   knitr::kable()
 ```
 
-| keyword               | pattern |  ngram|    n|
-|:----------------------|:--------|------:|----:|
-| partisan\_fray        | AN      |      2|    1|
-| coronavirus\_pandemic | NN      |      2|    3|
-| trillion\_package     | AN      |      2|    3|
-| third\_place          | AN      |      2|    1|
-| most\_automakers      | AN      |      2|    1|
+| keyword                        | pattern | ngram |   n |
+|:-------------------------------|:--------|------:|----:|
+| Durham_quick                   | NN      |     2 |   1 |
+| Olivia_Troye                   | NN      |     2 |   1 |
+| Rick_Flagg                     | NN      |     2 |   1 |
+| transit_point_for_the_refugees | NNPDN   |     5 |   1 |
+| Rep.\_Anna_Eshoo               | NNN     |     3 |   1 |
 
 ### Tokenizing multiword expressions
 
@@ -352,14 +342,14 @@ annotation %>%
   knitr::kable()
 ```
 
-| doc\_id | token       | lemma       | upos | xpos | newness                                    |
-|:--------|:------------|:------------|:-----|:-----|:-------------------------------------------|
-| 1       | six         | six         | NUM  | CD   | six\_months\_of\_work                      |
-| 1       | bipartisan  | bipartisan  | ADJ  | JJ   | bipartisan\_infrastructure\_bill           |
-| 1       | legislative | legislative | ADJ  | JJ   | legislative\_work\_on\_the\_infrastructure |
-| 1       | second      | second      | ADJ  | JJ   | second\_straight\_weekend                  |
-| 1       | next        | next        | ADJ  | JJ   | next\_week                                 |
-| 1       | most        | most        | ADJ  | JJS  | most\_weekends                             |
+| doc_id | token   | lemma   | upos | xpos | newness                   |
+|:-------|:--------|:--------|:-----|:-----|:--------------------------|
+| 1      | Foreign | foreign | ADJ  | JJ   | foreign_policy_experts    |
+| 1      | foreign | foreign | ADJ  | JJ   | foreign_policy_experience |
+| 1      | chaotic | chaotic | ADJ  | JJ   | chaotic_withdrawal        |
+| 1      | first   | first   | ADJ  | JJ   | first_time                |
+| 1      | first   | first   | ADJ  | JJ   | first_member              |
+| 1      | great   | great   | ADJ  | JJ   | great_qualities           |
 
 ### Annotation to DTM
 
@@ -381,13 +371,13 @@ str(dtm)
 ```
 
     ## Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-    ##   ..@ i       : int [1:6647] 0 2 3 4 5 6 7 8 9 10 ...
-    ##   ..@ p       : int [1:3670] 0 17 37 57 72 89 106 110 114 115 ...
-    ##   ..@ Dim     : int [1:2] 20 3669
+    ##   ..@ i       : int [1:4641] 0 1 2 3 5 6 8 9 10 11 ...
+    ##   ..@ p       : int [1:2588] 0 14 33 43 50 69 80 82 84 85 ...
+    ##   ..@ Dim     : int [1:2] 19 2587
     ##   ..@ Dimnames:List of 2
-    ##   .. ..$ : chr [1:20] "1" "10" "11" "12" ...
-    ##   .. ..$ : chr [1:3669] "-" "," "." "\"" ...
-    ##   ..@ x       : num [1:6647] 6 2 10 3 1 10 4 9 2 1 ...
+    ##   .. ..$ : chr [1:19] "1" "10" "11" "12" ...
+    ##   .. ..$ : chr [1:2587] "-" "," ":" "?" ...
+    ##   ..@ x       : num [1:4641] 4 10 2 1 2 1 4 2 2 2 ...
     ##   ..@ factors : list()
 
 ### Rebuilding text
@@ -399,14 +389,13 @@ new_text <- data.table::setDT(annotation0)[, list(text = paste(newness, collapse
 strwrap(new_text$text[5], width = 60)[1:5]
 ```
 
-    ## [1] "Jenna Ellis , a former_senior_legal_advisor to Donald Trump"
-    ## [2] "during he White House tenure , have stand by she suggestion"
-    ## [3] "that President Joe Biden should be impeach . speak on"      
-    ## [4] "Newsmax , to which she be a regular_contributor , Ellis"    
-    ## [5] "criticize Biden's action in regard to immigration at the"
+    ## [1] "Nrplus member article J oe Biden have do many_things in he" 
+    ## [2] "statement about Afghanistan over the last_week , from he"   
+    ## [3] "speech last Monday to he brief_press_conference Sunday"     
+    ## [4] "afternoon . He' critique afghan leader , blame Donald Trump"
+    ## [5] ", deny he could have know what would happen , and paint"
 
-doc2vec
--------
+## doc2vec
 
 ``` r
 new_text$nwords <- tokenizers::count_words(new_text$text)
@@ -436,20 +425,19 @@ predict(model.d2v, 'Biden',
         which = "word2word")[[1]]
 ```
 
-    ##    term1    term2 similarity rank
-    ## 1  Biden      ask  0.9076957    1
-    ## 2  Biden thousand  0.8601214    2
-    ## 3  Biden    image  0.8452662    3
-    ## 4  Biden        ;  0.8385843    4
-    ## 5  Biden        ,  0.8313099    5
-    ## 6  Biden     know  0.8297321    6
-    ## 7  Biden   before  0.8276444    7
-    ## 8  Biden     left  0.8265744    8
-    ## 9  Biden   States  0.8222479    9
-    ## 10 Biden    canot  0.8066943   10
+    ##    term1     term2 similarity rank
+    ## 1  Biden      week  0.9275486    1
+    ## 2  Biden     blame  0.9252347    2
+    ## 3  Biden   Sánchez  0.9113157    3
+    ## 4  Biden         )  0.9069669    4
+    ## 5  Biden      time  0.9028502    5
+    ## 6  Biden President  0.8952557    6
+    ## 7  Biden   Bongino  0.8931653    7
+    ## 8  Biden       Joe  0.8885962    8
+    ## 9  Biden       CNN  0.8841720    9
+    ## 10 Biden       Dan  0.8729199   10
 
-Search
-------
+## Search
 
 ### Search in context
 
@@ -465,60 +453,14 @@ egs <- PubmedMTK::pmtk_locate_term(text = tokens,
 egs %>% head() %>% knitr::kable()
 ```
 
-<table style="width:100%;">
-<colgroup>
-<col style="width: 4%" />
-<col style="width: 45%" />
-<col style="width: 5%" />
-<col style="width: 45%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">doc_id</th>
-<th style="text-align: left;">lhs</th>
-<th style="text-align: left;">instance</th>
-<th style="text-align: left;">rhs</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">1.2</td>
-<td style="text-align: left;">bipartisan infrastructure bill and repairing the U.S. image abroad , President</td>
-<td style="text-align: left;">Joe Biden</td>
-<td style="text-align: left;">should be heading out on vacation and a traditional August break</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">2.1</td>
-<td style="text-align: left;">1,600 people affected by the September 11 attacks are asking President</td>
-<td style="text-align: left;">Joe Biden</td>
-<td style="text-align: left;">to refrain from coming to Ground Zero to mark the 20th</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">3.1</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: left;">Joe Biden</td>
-<td style="text-align: left;">declared his third candidacy for president on 25 April 2019 in</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">4.1</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: left;">Joe Biden</td>
-<td style="text-align: left;">was first in line to celebrate his pal Barack Obama’s birthday</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">5.1</td>
-<td style="text-align: left;">White House tenure , has stood by her suggestion that President</td>
-<td style="text-align: left;">Joe Biden</td>
-<td style="text-align: left;">should be impeached .</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">6.2</td>
-<td style="text-align: left;">With rare exceptions ,</td>
-<td style="text-align: left;">Joe Biden</td>
-<td style="text-align: left;">throughout his presidency has stressed his determination to cooperate with the</td>
-</tr>
-</tbody>
-</table>
+| doc_id | lhs                                                              | instance  | rhs                                                                 |
+|:-------|:-----------------------------------------------------------------|:----------|:--------------------------------------------------------------------|
+| 1.2    | to visit him in Kabul was the then-senator from Delaware ,       | Joe Biden | .                                                                   |
+| 1.6    | " What have they done with the real                              | Joe Biden | ?                                                                   |
+| 1.68   | " I think                                                        | Joe Biden | sees Afghanistan as a distraction from the defining fight that he’s |
+| 2.1    | ( CNN )                                                          | Joe Biden | believes that you don’t care about Afghanistan .                    |
+| 3.1    | op-ed in one of Britain’s largest newspapers has taken aim at    | Joe Biden | , calling the 78-year-old president " exhausted " and " too         |
+| 6.16   | this because I’m about to say something nice about our president | Joe Biden | .                                                                   |
 
 ### Sentences containing X
 
@@ -532,60 +474,21 @@ jrb_sentences0 <- jrb_sentences[, list(text = paste(token, collapse = " ")),
 jrb_sentences0 %>% head() %>% knitr::kable()
 ```
 
-<table>
-<colgroup>
-<col style="width: 2%" />
-<col style="width: 4%" />
-<col style="width: 93%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">doc_id</th>
-<th style="text-align: left;">sentence_id</th>
-<th style="text-align: left;">text</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">2</td>
-<td style="text-align: left;">( AP ) — After more than six months of work combating the coronavirus , negotiating a bipartisan infrastructure bill and repairing the U.S. image abroad , President Joe Biden should be heading out on vacation and a traditional August break from Washington .</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">3</td>
-<td style="text-align: left;">But with legislative work on the infrastructure bill keeping the Senate in session for a second straight weekend , and likely through next week , Biden hasn’t gone far — just home to Wilmington , Delaware , as he has done most weekends since taking office .</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">5</td>
-<td style="text-align: left;">Biden will spend some of next week at the White House before he decamps again , either for Delaware — he also owns a home in Rehoboth Beach — or Camp David , the official presidential retreat in Maryland’s Catoctin Mountains , Psaki said .</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">7</td>
-<td style="text-align: left;">Like his predecessors , Biden travels with a large entourage of aides , Secret Service agents and journalists in an unmistakable motorcade of more than a dozen dark vehicles .</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">13</td>
-<td style="text-align: left;">Biden and his aides are likely to discuss a range of issues , including getting the $ 1 trillion infrastructure bill through the Senate , strategizing next steps to counter surging coronavirus infections and eyeing the Aug. 31 deadline for the U.S. pullout from Afghanistan .</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">27</td>
-<td style="text-align: left;">During weekends at home in Wilmington , Biden has ventured out to play golf , attend Mass and head to his sister’s Pennsylvania home for family dinner .</td>
-</tr>
-</tbody>
-</table>
+| doc_id | sentence_id | text                                                                                                                                                                                                                             |
+|:-------|:------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1      | 1           | Foreign policy experts are asking how decades of foreign policy experience could have led President Biden to oversee such a chaotic withdrawal .                                                                                 |
+| 1      | 2           | In January 2002 , when the U.S. Embassy in Afghanistan reopened for the first time since 1989 , Ambassador Ryan Crocker said the first member of Congress to visit him in Kabul was the then-senator from Delaware , Joe Biden . |
+| 1      | 3           | " One of his really great qualities , I thought , was his driving need to see things for himself . . . and I just really respected that , " Crocker said , pointing out that Biden also visited Iraq many times .                |
+| 1      | 6           | " What have they done with the real Joe Biden ?                                                                                                                                                                                  |
+| 1      | 17          | Biden blamed the former Afghan government for pushing against an earlier start to evacuations .                                                                                                                                  |
+| 1      | 31          | Biden " has always had strong views about our role in Afghanistan , " Panetta said .                                                                                                                                             |
 
-Odds
-----
+## Odds
 
 ### Visualizing dependencies
 
 ``` r
-sentence <- "The green giant wishes for Jackie-boy only good things"
+sentence <- "The green giant wishes for Jackie-boy only peace"
 sent_depend <- udpipe::udpipe(udmodel, x = sentence)
 
 textplot::textplot_dependencyparser(sent_depend, 
@@ -593,7 +496,6 @@ textplot::textplot_dependencyparser(sent_depend,
                                     subtitle = NULL)
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-22-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-23-1.png)
 
-Summary
--------
+## Summary
