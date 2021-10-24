@@ -280,7 +280,7 @@ annotation$newness <- udpipe::txt_recode_ngram(tolower(annotation$token),
 
 
 
-### Annotation to DTM
+## Annotation to DTM
 
 > Per the annotation structure above, we can (1) cast into a document-term matrix and (2) normalize vocabulary to the lemma in one fell swoop.
 
@@ -299,8 +299,7 @@ str(dtm)
 
 
 
-
-### Rebuilding text
+## doc2vec
 
 ```{r}
 new_text <- data.table::setDT(annotation0)[, list(text = paste(newness, collapse = " ")), 
@@ -309,9 +308,6 @@ new_text <- data.table::setDT(annotation0)[, list(text = paste(newness, collapse
 strwrap(new_text$text[1], width = 60)[1:5]
 ```
 
-
-
-## doc2vec
 
 ```{r}
 new_text$nwords <- tokenizers::count_words(new_text$text)

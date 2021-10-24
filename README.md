@@ -23,8 +23,7 @@ self.
         -   [Noun phrases](#noun-phrases)
         -   [Tokenizing multiword
             expressions](#tokenizing-multiword-expressions)
-        -   [Annotation to DTM](#annotation-to-dtm)
-        -   [Rebuilding text](#rebuilding-text)
+    -   [Annotation to DTM](#annotation-to-dtm)
     -   [doc2vec](#doc2vec)
     -   [Text summary via Pagerank](#text-summary-via-pagerank)
     -   [Search](#search)
@@ -99,10 +98,9 @@ tweets <-  rtweet::search_tweets(q = 'political ideology',
 strwrap(tweets$text[1], width = 60)
 ```
 
-    ## [1] "Scientists need to study her. She's a rare political"       
-    ## [2] "creature that has no ideology, save for an instinctive need"
-    ## [3] "to take politically unpopular positions that hurt poor"     
-    ## [4] "people"
+    ## [1] "@meagan_callico Zionism is a political ideology. Jews are"
+    ## [2] "an ethnoreligious group. Most Israelis are both Jews and" 
+    ## [3] "Zionists."
 
 ## Processing
 
@@ -298,14 +296,14 @@ collocations0 %>%
   knitr::kable()
 ```
 
-| keyword              | freq |    pmi |
-|:---------------------|-----:|-------:|
-| published in         |    3 |  5.814 |
-| to me                |    3 |  5.402 |
-| better understand    |    3 | 10.622 |
-| Imran Khan           |    6 |  9.300 |
-| in the United States |    3 | 10.617 |
-| has been             |    5 |  8.073 |
+| keyword                   | freq |    pmi |
+|:--------------------------|-----:|-------:|
+| according to              |    7 |  5.402 |
+| Health Forum              |    4 | 10.037 |
+| University of             |    6 |  5.138 |
+| people who                |    3 |  6.312 |
+| in the United             |    4 |  7.440 |
+| was positively associated |    3 |  9.812 |
 
 ### Noun phrases
 
@@ -334,13 +332,13 @@ nps1 %>%
   knitr::kable()
 ```
 
-| keyword                     | pattern | ngram |   n |
-|:----------------------------|:--------|------:|----:|
-| informal_far-right_movement | ANN     |     3 |   1 |
-| social_media                | AN      |     2 |   9 |
-| Trump_page                  | NN      |     2 |   1 |
-| social_media_platform       | ANN     |     3 |   2 |
-| years_Imran                 | NN      |     2 |   1 |
+| keyword                         | pattern | ngram |   n |
+|:--------------------------------|:--------|------:|----:|
+| new_site                        | AN      |     2 |   1 |
+| conservative_ideas_like_liberty | ANPN    |     4 |   1 |
+| United_Kingdom                  | NN      |     2 |   2 |
+| major_bureaucratic_reshuffling  | AAN     |     3 |   1 |
+| political_contexts              | AN      |     2 |   1 |
 
 ### Tokenizing multiword expressions
 
@@ -358,7 +356,7 @@ annotation$newness <- udpipe::txt_recode_ngram(tolower(annotation$token),
                                                sep = '_')
 ```
 
-### Annotation to DTM
+## Annotation to DTM
 
 > Per the annotation structure above, we can (1) cast into a
 > document-term matrix and (2) normalize vocabulary to the lemma in one
@@ -387,7 +385,7 @@ str(dtm)
     ##   ..@ x       : num [1:2501] 10 2 3 1 2 79 30 48 54 9 ...
     ##   ..@ factors : list()
 
-### Rebuilding text
+## doc2vec
 
 ``` r
 new_text <- data.table::setDT(annotation0)[, list(text = paste(newness, collapse = " ")), 
@@ -401,8 +399,6 @@ strwrap(new_text$text[1], width = 60)[1:5]
     ## [3] "United States and be distinct from"                      
     ## [4] "traditional_indicators_of_political_ideology , accord to"
     ## [5] "new_research . the finding indicate"
-
-## doc2vec
 
 ``` r
 new_text$nwords <- tokenizers::count_words(new_text$text)
