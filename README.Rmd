@@ -139,7 +139,7 @@ tokens[[1]]
 df <- textshape::tidy_list(tokens, 
                            id.name = 'doc_id', 
                            content.name = 'token')
-
+  
 ####
 df[, sentence_id := gsub('^.*\\.', '', doc_id)]
 df[, doc_id := gsub('\\..*$', '', doc_id)]
@@ -287,7 +287,8 @@ annotation$newness <- udpipe::txt_recode_ngram(tolower(annotation$token),
 ```{r}
 annotation0 <- annotation %>%
   filter(!is.na(newness)) %>%
-  mutate(newness = ifelse(grepl('_', newness), newness, lemma)) 
+  mutate(newness = ifelse(grepl('_', newness), newness, lemma),
+         uid = paste0(doc_id, '.', sentence_id)) 
 
 dtm <- annotation0 %>% 
   count(doc_id, newness) %>%
@@ -341,6 +342,39 @@ predict(model.d2v, 'find',
 
 ## Text summary via Pagerank
 
+> Here, we use the annotated version of our corpus, and filter PoS to nouns and ajectives; however, non-annotated version of corpus could be used.
+
+```{r}
+sent1 <- sentences[, c('sentence_id', 
+                       'text', 
+                       'doc_id', 
+                       'uid')]
+
+df1 <- subset(annotation0[, c('sentence_id', 
+                              'lemma',
+                              'upos',
+                              'doc_id', 
+                              'uid')],
+              upos %in% c('PROPN', 'NOUN', 'ADJ'))
+
+tr <- lapply(unique(df1$doc_id), function(x){
+  
+  ss <- subset(sent1, doc_id == x)
+  tm <- subset(df1, doc_id == x)
+  if(nrow(tm) < 4 | nrow(ss) < 4) {NA} else{
+    textrank::textrank_sentences(data = ss[, c(1:2)], 
+                                 terminology = tm[, c(1:2)]) }   })
+
+s <- lapply(tr, 
+            summary, 
+            n = 3, 
+            keep.sentence.order = TRUE)
+
+names(s) <- full$title
+s[1:3]
+```
+
+
 
 ## Search
 
@@ -371,9 +405,7 @@ eg_sentences0 %>% head() %>% knitr::kable()
 
 
 
-## Odds
-
-### Visualizing dependencies
+## Visualizing dependencies
 
 ```{r message=FALSE, warning=FALSE}
 sentence <- "The green giant wished for Jackie-boy only peace."
@@ -386,6 +418,6 @@ textplot::textplot_dependencyparser(sent_depend,
 
 
 
-## Summary
+## Appendix
 
 

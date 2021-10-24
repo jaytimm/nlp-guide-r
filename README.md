@@ -29,9 +29,8 @@ self.
     -   [Search](#search)
         -   [Search in context](#search-in-context)
         -   [Sentences containing X](#sentences-containing-x)
-    -   [Odds](#odds)
-        -   [Visualizing dependencies](#visualizing-dependencies)
-    -   [Summary](#summary)
+    -   [Visualizing dependencies](#visualizing-dependencies)
+    -   [Appendix](#appendix)
 
 ## Quick live text
 
@@ -48,11 +47,11 @@ full <- news %>% left_join(meta)
 strwrap(full$text[1], width = 60)[1:5]
 ```
 
-    ## [1] "Anti-establishment sentiments are a key component of"       
-    ## [2] "political opinion and behavior in the United States and are"
-    ## [3] "distinct from traditional indicators of political ideology,"
-    ## [4] "according to new research. The findings indicate"           
-    ## [5] "anti-establishment viewpoints have played a key role in"
+    ## [1] "The \"anti-establishment\" ideology is a major contributor to"
+    ## [2] "the belief systems that catapulted former President Donald"   
+    ## [3] "Trump to power and the formation of the QAnon movement,"      
+    ## [4] "according to findings published by the American Journal of"   
+    ## [5] "Political Science and The Forum. Speaking to PsyPost, Adam"
 
 ### PubMed abstracts
 
@@ -61,7 +60,7 @@ pmids <- PubmedMTK::pmtk_search_pubmed(search_term = 'political ideology',
                                        fields = c('TIAB','MH'))
 ```
 
-    ## [1] "political ideology[TIAB] OR political ideology[MH]: 498 records"
+    ## [1] "political ideology[TIAB] OR political ideology[MH]: 499 records"
 
 ``` r
 abstracts <- PubmedMTK::pmtk_get_records2(pmids = pmids$pmid[1:10], 
@@ -72,16 +71,16 @@ abstracts <- PubmedMTK::pmtk_get_records2(pmids = pmids$pmid[1:10],
 strwrap(abstracts[[1]]$abstract, width = 60)[1:10]
 ```
 
-    ##  [1] "This article explores the moral dimensions of the clinical" 
-    ##  [2] "narration of suffering in a highly political context. Based"
-    ##  [3] "on an ethnographic analysis of psychotherapists'"           
-    ##  [4] "discussions of a clinical case related to the Israeli"      
-    ##  [5] "evacuation from Gaza, I illustrate how the care providers"  
-    ##  [6] "navigate competing moral logics while explaining the"       
-    ##  [7] "reasons for the patient's experience. Capturing moments of" 
-    ##  [8] "the simultaneous appearance of different explanatory"       
-    ##  [9] "models, informed by contradictory moral grammars, during"   
-    ## [10] "the process of clinical reasoning allowed me to obtain a"
+    ##  [1] "This study aimed to assess the correlation between"         
+    ##  [2] "political ideologies, government trust, and COVID-19"       
+    ##  [3] "vaccine hesitancy in South Korea during the COVID-19"       
+    ##  [4] "pandemic. A cross-sectional survey was conducted among"     
+    ##  [5] "South Korea's general population and 1000 respondents (aged"
+    ##  [6] "18 years and older) were included. We used multivariate"    
+    ##  [7] "logistic regression models to identify the factors"         
+    ##  [8] "associated with vaccine hesitancy. Respondents who"         
+    ##  [9] "self-identified as liberal or held \"no political opinion\""
+    ## [10] "had higher rates of vaccine hesitancy than conservative"
 
 ### Tweets
 
@@ -98,9 +97,11 @@ tweets <-  rtweet::search_tweets(q = 'political ideology',
 strwrap(tweets$text[1], width = 60)
 ```
 
-    ## [1] "@meagan_callico Zionism is a political ideology. Jews are"
-    ## [2] "an ethnoreligious group. Most Israelis are both Jews and" 
-    ## [3] "Zionists."
+    ## [1] "The irony of this NOVA resident chiming in: it's okay and"  
+    ## [2] "*necessary* for the DC spillovers to completely take over"  
+    ## [3] "1/4 of VA, and inject their ideology and totally change the"
+    ## [4] "political landscape forever. But this sign… this sign! The" 
+    ## [5] "gall! https://t.co/AZSa6Y9yPW"
 
 ## Processing
 
@@ -125,14 +126,14 @@ colnames(sentences)[1:2] <- c('doc_id', 'sentence_id')
 sentences %>% select(sentence_id, text) %>% head() %>% knitr::kable()
 ```
 
-| sentence_id | text                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-|------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|           1 | Anti-establishment sentiments are a key component of political opinion and behavior in the United States and are distinct from traditional indicators of political ideology, according to new research.                                                                                                                                                                                                                                                                                                    |
-|           2 | The findings indicate anti-establishment viewpoints have played a key role in some beliefs that came to prominence during the Trump era, such as the QAnon movement.                                                                                                                                                                                                                                                                                                                                       |
-|           3 | The research has been published in the American Journal of Political Science and The Forum.                                                                                                                                                                                                                                                                                                                                                                                                                |
-|           4 | “I was interested in this project because it increasingly seemed to me that polarization and political identities were increasingly bearing the brunt of the blame –– perhaps erroneously –– for socially undesirable beliefs and actions that were probably the product of other orientations, like conspiracy thinking and a tendency to view politics as a struggle between good and evil,” said co-author Adam M. Enders, an assistant professor of political science at the University of Louisville. |
-|           5 | “American politics seems to be different than in previous decades and we wanted to know why,” added co-author Joseph E. Uscinski of the University of Miami.                                                                                                                                                                                                                                                                                                                                               |
-|           6 | “Many people blame current political problems — conspiracy theories, fake news, political violence — on polarization.                                                                                                                                                                                                                                                                                                                                                                                      |
+| sentence_id | text                                                                                                                                                                                                                                                                       |
+|------------:|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|           1 | The “anti-establishment” ideology is a major contributor to the belief systems that catapulted former President Donald Trump to power and the formation of the QAnon movement, according to findings published by the American Journal of Political Science and The Forum. |
+|           2 | Speaking to PsyPost, Adam M. Enders — an assistant political science professor at the University of Louisville and co-author of the study — discussed how they compiled the information.                                                                                   |
+|           3 | “While we discuss primarily historical and theoretical literature arguing that anti-establishment viewpoints are hardly new, no one has been empirically tracking them over time,” Enders explained.                                                                       |
+|           4 | “Our study is a first cut at taking this ignored dimension of public opinion more seriously.                                                                                                                                                                               |
+|           5 | We need to track anti-establishment orientations over time to better understand how they ebb and flow.                                                                                                                                                                     |
+|           6 | We also need to track them across social and political contexts to see what role these ideas play in other countries with different political systems, economic systems, etc.”                                                                                             |
 
 ### Tokenization
 
@@ -164,16 +165,21 @@ names(tokens) <-sentences$uid
 tokens[[1]]
 ```
 
-    ##  [1] "Anti-establishment" "sentiments"         "are"               
-    ##  [4] "a"                  "key"                "component"         
-    ##  [7] "of"                 "political"          "opinion"           
-    ## [10] "and"                "behavior"           "in"                
-    ## [13] "the"                "United"             "States"            
-    ## [16] "and"                "are"                "distinct"          
-    ## [19] "from"               "traditional"        "indicators"        
-    ## [22] "of"                 "political"          "ideology"          
-    ## [25] ","                  "according"          "to"                
-    ## [28] "new"                "research"           "."
+    ##  [1] "The"                "\""                 "anti-establishment"
+    ##  [4] "\""                 "ideology"           "is"                
+    ##  [7] "a"                  "major"              "contributor"       
+    ## [10] "to"                 "the"                "belief"            
+    ## [13] "systems"            "that"               "catapulted"        
+    ## [16] "former"             "President"          "Donald"            
+    ## [19] "Trump"              "to"                 "power"             
+    ## [22] "and"                "the"                "formation"         
+    ## [25] "of"                 "the"                "QAnon"             
+    ## [28] "movement"           ","                  "according"         
+    ## [31] "to"                 "findings"           "published"         
+    ## [34] "by"                 "the"                "American"          
+    ## [37] "Journal"            "of"                 "Political"         
+    ## [40] "Science"            "and"                "The"               
+    ## [43] "Forum"              "."
 
 ### Tokens to data frame
 
@@ -184,7 +190,7 @@ tokens[[1]]
 df <- textshape::tidy_list(tokens, 
                            id.name = 'doc_id', 
                            content.name = 'token')
-
+  
 ####
 df[, sentence_id := gsub('^.*\\.', '', doc_id)]
 df[, doc_id := gsub('\\..*$', '', doc_id)]
@@ -194,16 +200,16 @@ df %>%  slice(1:10)
 ```
 
     ##     doc_id              token sentence_id token_id
-    ##  1:      1 Anti-establishment           1        1
-    ##  2:      1         sentiments           1        2
-    ##  3:      1                are           1        3
-    ##  4:      1                  a           1        4
-    ##  5:      1                key           1        5
-    ##  6:      1          component           1        6
-    ##  7:      1                 of           1        7
-    ##  8:      1          political           1        8
-    ##  9:      1            opinion           1        9
-    ## 10:      1                and           1       10
+    ##  1:      1                The           1        1
+    ##  2:      1                  "           1        2
+    ##  3:      1 anti-establishment           1        3
+    ##  4:      1                  "           1        4
+    ##  5:      1           ideology           1        5
+    ##  6:      1                 is           1        6
+    ##  7:      1                  a           1        7
+    ##  8:      1              major           1        8
+    ##  9:      1        contributor           1        9
+    ## 10:      1                 to           1       10
 
 ### Vocabulary
 
@@ -216,12 +222,12 @@ head(vocab)
 ```
 
     ##                 token text_freq doc_freq
-    ## 1: Anti-establishment         2        1
-    ## 2:         sentiments         3        1
-    ## 3:                are        27        6
-    ## 4:                  a       116        9
-    ## 5:                key         2        1
-    ## 6:          component         1        1
+    ## 1:                The        52        7
+    ## 2:                  "        59        2
+    ## 3: anti-establishment        20        2
+    ## 4:           ideology        18        8
+    ## 5:                 is        77        9
+    ## 6:                  a       165       10
 
 ## Annotation
 
@@ -266,14 +272,14 @@ annotation %>%
   knitr::kable()
 ```
 
-| doc_id | sentence_id | token_id | token              | lemma              | upos | xpos |
-|:-------|------------:|:---------|:-------------------|:-------------------|:-----|:-----|
-| 1      |           1 | 1        | Anti-establishment | Anti-establishment | ADJ  | JJ   |
-| 1      |           1 | 2        | sentiments         | sentiment          | NOUN | NNS  |
-| 1      |           1 | 3        | are                | be                 | AUX  | VBP  |
-| 1      |           1 | 4        | a                  | a                  | DET  | DT   |
-| 1      |           1 | 5        | key                | key                | ADJ  | JJ   |
-| 1      |           1 | 6        | component          | component          | NOUN | NN   |
+| doc_id | sentence_id | token_id | token              | lemma              | upos  | xpos |
+|:-------|------------:|:---------|:-------------------|:-------------------|:------|:-----|
+| 1      |           1 | 1        | The                | the                | DET   | DT   |
+| 1      |           1 | 2        | ”                  | ”                  | PUNCT | \`\` |
+| 1      |           1 | 3        | anti-establishment | anti-establishment | NOUN  | NN   |
+| 1      |           1 | 4        | ”                  | ”                  | PUNCT | ’’   |
+| 1      |           1 | 5        | ideology           | ideology           | NOUN  | NN   |
+| 1      |           1 | 6        | is                 | be                 | AUX   | VBZ  |
 
 ## Multiword expressions
 
@@ -296,14 +302,14 @@ collocations0 %>%
   knitr::kable()
 ```
 
-| keyword                   | freq |    pmi |
-|:--------------------------|-----:|-------:|
-| according to              |    7 |  5.402 |
-| Health Forum              |    4 | 10.037 |
-| University of             |    6 |  5.138 |
-| people who                |    3 |  6.312 |
-| in the United             |    4 |  7.440 |
-| was positively associated |    3 |  9.812 |
+| keyword                        | freq |    pmi |
+|:-------------------------------|-----:|-------:|
+| another person will not be     |    3 |  7.906 |
+| moved further                  |    3 |  9.825 |
+| arrival of President Joe Biden |    3 | 10.366 |
+| link on each comment to        |    3 |  5.366 |
+| history behind an              |    3 |  8.046 |
+| likelihood of                  |    3 |  5.146 |
 
 ### Noun phrases
 
@@ -332,13 +338,13 @@ nps1 %>%
   knitr::kable()
 ```
 
-| keyword                         | pattern | ngram |   n |
-|:--------------------------------|:--------|------:|----:|
-| new_site                        | AN      |     2 |   1 |
-| conservative_ideas_like_liberty | ANPN    |     4 |   1 |
-| United_Kingdom                  | NN      |     2 |   2 |
-| major_bureaucratic_reshuffling  | AAN     |     3 |   1 |
-| political_contexts              | AN      |     2 |   1 |
+| keyword          | pattern | ngram |   n |
+|:-----------------|:--------|------:|----:|
+| Doug_Traubel     | NN      |     2 |   1 |
+| legal_questions  | AN      |     2 |   1 |
+| health_policy    | NN      |     2 |   1 |
+| New_York         | NN      |     2 |   1 |
+| work_requirement | NN      |     2 |   3 |
 
 ### Tokenizing multiword expressions
 
@@ -365,7 +371,8 @@ annotation$newness <- udpipe::txt_recode_ngram(tolower(annotation$token),
 ``` r
 annotation0 <- annotation %>%
   filter(!is.na(newness)) %>%
-  mutate(newness = ifelse(grepl('_', newness), newness, lemma)) 
+  mutate(newness = ifelse(grepl('_', newness), newness, lemma),
+         uid = paste0(doc_id, '.', sentence_id)) 
 
 dtm <- annotation0 %>% 
   count(doc_id, newness) %>%
@@ -376,13 +383,13 @@ str(dtm)
 ```
 
     ## Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-    ##   ..@ i       : int [1:2501] 0 4 5 6 7 0 1 2 3 4 ...
-    ##   ..@ p       : int [1:1718] 0 5 14 18 22 24 33 39 45 50 ...
-    ##   ..@ Dim     : int [1:2] 9 1717
+    ##   ..@ i       : int [1:3976] 0 1 2 5 7 8 9 0 1 2 ...
+    ##   ..@ p       : int [1:2532] 0 7 17 23 28 32 42 51 58 64 ...
+    ##   ..@ Dim     : int [1:2] 10 2531
     ##   ..@ Dimnames:List of 2
-    ##   .. ..$ : chr [1:9] "1" "2" "3" "4" ...
-    ##   .. ..$ : chr [1:1717] "-" "," ";" ":" ...
-    ##   ..@ x       : num [1:2501] 10 2 3 1 2 79 30 48 54 9 ...
+    ##   .. ..$ : chr [1:10] "1" "10" "2" "3" ...
+    ##   .. ..$ : chr [1:2531] "-" "," ";" ":" ...
+    ##   ..@ x       : num [1:3976] 20 1 10 1 2 4 1 136 10 79 ...
     ##   ..@ factors : list()
 
 ## doc2vec
@@ -394,11 +401,11 @@ new_text <- data.table::setDT(annotation0)[, list(text = paste(newness, collapse
 strwrap(new_text$text[1], width = 60)[1:5]
 ```
 
-    ## [1] "anti-establishment_sentiments be a"                      
-    ## [2] "key_component_of_political_opinion and behavior in the"  
-    ## [3] "United States and be distinct from"                      
-    ## [4] "traditional_indicators_of_political_ideology , accord to"
-    ## [5] "new_research . the finding indicate"
+    ## [1] "the \" anti-establishment \" ideology be a"                 
+    ## [2] "major_contributor_to_the_belief system that catapult"       
+    ## [3] "former_president Donald Trump to power and the formation of"
+    ## [4] "the QAnon movement , accord to findings publish by the"     
+    ## [5] "american journal of political_science and the Forum . speak"
 
 ``` r
 new_text$nwords <- tokenizers::count_words(new_text$text)
@@ -428,19 +435,68 @@ predict(model.d2v, 'find',
         which = "word2word")[[1]]
 ```
 
-    ##    term1      term2 similarity rank
-    ## 1   find researcher  0.9557187    1
-    ## 2   find       show  0.9496294    2
-    ## 3   find  exemption  0.9461185    3
-    ## 4   find    compare  0.9441468    4
-    ## 5   find        not  0.9369903    5
-    ## 6   find     either  0.9322490    6
-    ## 7   find  meanwhile  0.9292600    7
-    ## 8   find       role  0.9269795    8
-    ## 9   find    overall  0.9248223    9
-    ## 10  find       even  0.9078073   10
+    ##    term1             term2 similarity rank
+    ## 1   find work_requirements  0.9820647    1
+    ## 2   find         exemption  0.9820389    2
+    ## 3   find           require  0.9818855    3
+    ## 4   find        researcher  0.9800472    4
+    ## 5   find            assist  0.9757625    5
+    ## 6   find         colleague  0.9756172    6
+    ## 7   find              even  0.9718631    7
+    ## 8   find         implement  0.9656573    8
+    ## 9   find           content  0.9646798    9
+    ## 10  find         physician  0.9637163   10
 
 ## Text summary via Pagerank
+
+> Here, we use the annotated version of our corpus, and filter PoS to
+> nouns and ajectives; however, non-annotated version of corpus could be
+> used.
+
+``` r
+sent1 <- sentences[, c('sentence_id', 
+                       'text', 
+                       'doc_id', 
+                       'uid')]
+
+df1 <- subset(annotation0[, c('sentence_id', 
+                              'lemma',
+                              'upos',
+                              'doc_id', 
+                              'uid')],
+              upos %in% c('PROPN', 'NOUN', 'ADJ'))
+
+tr <- lapply(unique(df1$doc_id), function(x){
+  
+  ss <- subset(sent1, doc_id == x)
+  tm <- subset(df1, doc_id == x)
+  if(nrow(tm) < 4 | nrow(ss) < 4) {NA} else{
+    textrank::textrank_sentences(data = ss[, c(1:2)], 
+                                 terminology = tm[, c(1:2)]) }   })
+
+s <- lapply(tr, 
+            summary, 
+            n = 3, 
+            keep.sentence.order = TRUE)
+
+names(s) <- full$title
+s[1:3]
+```
+
+    ## $`This psychological factor explains the QAnon movement better than political ideology: scientists`
+    ## [1] "As a historian of the Bible in American life, I can attest that such shallow reading in service of political and cultural agendas has long been a fixture of evangelical Christianity. "                                   
+    ## [2] "But these evangelicals never developed their approach to understanding the Bible in complete isolation. "                                                                                                                  
+    ## [3] "Like they did in the 19th century, evangelicals who refuse to get vaccinated today tend to follow the spiritual leaders who have built followings by baptizing political or cultural propaganda in a sea of Bible verses. "
+    ## 
+    ## $`Scientists uncover a psychological factor that explains support for QAnon better than political ideology`
+    ## [1] "But anti-establishment sentiments were more strongly associated with endorsing these beliefs than political ideology. "                                                                                                                                                                                                                                                
+    ## [2] "The researchers also found that support for Donald Trump was positively associated with anti-establishment orientations, but anti-establishment orientations were simultaneously associated with reduced support for both the Republican and Democratic parties, a finding which provided a “critical distinction” about the events at the U.S. Capitol on January 6. "
+    ## [3] "“People espousing the most anti-establishment views are attracted to Donald Trump, the outsider, not Donald Trump, the leader of the Republican Party,” the researchers said. "                                                                                                                                                                                        
+    ## 
+    ## $`Explained: What Is Alt-Right Movement And Which Political Ideology It Follows`
+    ## [1] "Rather they are a group of right-wing ideology believing people who reject many liberal ideas that are core to the US political setup. "                                        
+    ## [2] "During this time many right-wing ideologues, white supremacists, and many neo-nazis joined the movement.  "                                                                     
+    ## [3] "The alt-right however declined after 2017 due to many reasons like the backlash following Unite the Right rally, fractures within the movement, opposition from the US public. "
 
 ## Search
 
@@ -464,8 +520,7 @@ ctrialsgov::ctgov_kwic(term = 'political ideology|party affiliation',
     ## [34545946]  when assessed together, political |party affiliation| (e.g., Republican, Democrat) but n
     ## [34545946] .g., Republican, Democrat) but not |political ideology| (e.g., conservative, liberal) pred
     ## [34545946]  When assessed together, political |party affiliation| but not political ideology signifi
-    ## [34545946] olitical party affiliation but not |political ideology| significantly predicted face mask 
-    ## [34508051] ucts in relationships moderated by |political ideology|. Public health messages targeting
+    ## [34545946] olitical party affiliation but not |political ideology| significantly predicted face mask
 
 ### Sentences containing X
 
@@ -481,13 +536,12 @@ eg_sentences0 %>% head() %>% knitr::kable()
 
 | doc_id | sentence_id | text                                                                                                                                                                                                                                                                                                                                      |
 |:-------|:------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 1      | 2           | The findings indicate anti-establishment viewpoints have played a key role in some beliefs that came to prominence during the Trump era , such as the QAnon movement .                                                                                                                                                                    |
-| 1      | 26          | Ender and Uscinski’s research published in The Forum , based on a national survey of 1,947 U.S. adults conducted between October 8 and 21 , 2020 , found that anti-establishment orientations were also strongly related to the endorsement of conspiracies related to COVID-19 , QAnon , Donald Trump , and the 2020 election .          |
-| 1      | 27          | For example , agreement with statements such as “ Satanic sex traffickers control the government ” ( QAnon ) and “ There is a conspiracy to stop the U.S. Post Office from processing mail-in ballots ” ( election fraud ) were weakly related to political ideology , but strongly related to having an anti-establishment orientation . |
+| 1      | 1           | The ” anti-establishment ” ideology is a major contributor to the belief systems that catapulted former President Donald Trump to power and the formation of the QAnon movement , according to findings published by the American Journal of Political Science and The Forum .                                                            |
+| 2      | 2           | The findings indicate anti-establishment viewpoints have played a key role in some beliefs that came to prominence during the Trump era , such as the QAnon movement .                                                                                                                                                                    |
+| 2      | 26          | Ender and Uscinski’s research published in The Forum , based on a national survey of 1,947 U.S. adults conducted between October 8 and 21 , 2020 , found that anti-establishment orientations were also strongly related to the endorsement of conspiracies related to COVID-19 , QAnon , Donald Trump , and the 2020 election .          |
+| 2      | 27          | For example , agreement with statements such as “ Satanic sex traffickers control the government ” ( QAnon ) and “ There is a conspiracy to stop the U.S. Post Office from processing mail-in ballots ” ( election fraud ) were weakly related to political ideology , but strongly related to having an anti-establishment orientation . |
 
-## Odds
-
-### Visualizing dependencies
+## Visualizing dependencies
 
 ``` r
 sentence <- "The green giant wished for Jackie-boy only peace."
@@ -498,6 +552,6 @@ textplot::textplot_dependencyparser(sent_depend,
                                     subtitle = NULL)
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-24-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-25-1.png)
 
-## Summary
+## Appendix
