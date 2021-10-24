@@ -79,6 +79,7 @@ strwrap(tweets$text[1], width = 60)
 
 ```{r}
 abbrevs <- c(corpus::abbreviations_en, 'Gov.', 'Sen.')
+abbrevs
 ```
 
 
@@ -175,7 +176,7 @@ udmodel <- udpipe::udpipe_load_model('english-ewt-ud-2.3-181115.udpipe')
 ```
 
 
-> The `udpipe` package can be used to annotate simple text or token objects.  The utility of annotating a token object versus simple text, however, is that the user specifies what constitutes a token and what constitutes a sentence. 
+> The `udpipe` package can be used to annotate simple text or token objects.  One benefit of annotating a token object versus simple text is that the user can define token and sentence constitution.
 
 ```{r}
 tokens1 <- lapply(tokens, c, '\n')
@@ -342,7 +343,7 @@ predict(model.d2v, 'find',
 
 ## Text summary via Pagerank
 
-> Here, we use the annotated version of our corpus, and filter PoS to nouns and ajectives; however, non-annotated version of corpus could be used.
+> Here, we use the annotated version of our corpus, and filter PoS to nouns and adjectives; however, non-annotated version of corpus could be used. Via the `textrank` package.
 
 ```{r}
 sent1 <- sentences[, c('sentence_id', 

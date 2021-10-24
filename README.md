@@ -97,11 +97,9 @@ tweets <-  rtweet::search_tweets(q = 'political ideology',
 strwrap(tweets$text[1], width = 60)
 ```
 
-    ## [1] "The irony of this NOVA resident chiming in: it's okay and"  
-    ## [2] "*necessary* for the DC spillovers to completely take over"  
-    ## [3] "1/4 of VA, and inject their ideology and totally change the"
-    ## [4] "political landscape forever. But this sign… this sign! The" 
-    ## [5] "gall! https://t.co/AZSa6Y9yPW"
+    ## [1] "@SansFollowers @VirgilWlkrOMAHA Like churches who who've" 
+    ## [2] "blended in the political ideology of Trumpism and include"
+    ## [3] "his image in religious iconography."
 
 ## Processing
 
@@ -109,7 +107,36 @@ strwrap(tweets$text[1], width = 60)
 
 ``` r
 abbrevs <- c(corpus::abbreviations_en, 'Gov.', 'Sen.')
+abbrevs
 ```
+
+    ##   [1] "A."       "A.D."     "a.m."     "A.M."     "A.S."     "AA."     
+    ##   [7] "AB."      "Abs."     "AD."      "Adj."     "Adv."     "Alt."    
+    ##  [13] "Approx."  "Apr."     "Aug."     "B."       "B.V."     "C."      
+    ##  [19] "C.F."     "C.O.D."   "Capt."    "Card."    "cf."      "Col."    
+    ##  [25] "Comm."    "Conn."    "Cont."    "D."       "D.A."     "D.C."    
+    ##  [31] "DC."      "Dec."     "Def."     "Dept."    "Diff."    "Dr."     
+    ##  [37] "E."       "e.g."     "E.g."     "E.G."     "Ed."      "Est."    
+    ##  [43] "etc."     "Etc."     "Ex."      "exec."    "Exec."    "F."      
+    ##  [49] "Feb."     "Fn."      "Fri."     "G."       "Gb."      "H."      
+    ##  [55] "Hon.B.A." "Hz."      "I."       "I.D."     "i.e."     "I.e."    
+    ##  [61] "I.J."     "I.T."     "Id."      "In."      "J.B."     "J.D."    
+    ##  [67] "J.K."     "Jam."     "Jan."     "Job."     "Joe."     "Jr."     
+    ##  [73] "Jul."     "Jun."     "K."       "K.R."     "Kb."      "L."      
+    ##  [79] "L.A."     "L.P."     "Lev."     "Lib."     "Lt."      "Lt.Cdr." 
+    ##  [85] "M."       "M.I.T."   "M.R."     "M.T."     "Maj."     "Mar."    
+    ##  [91] "Mart."    "Mb."      "Md."      "Mgr."     "Min."     "Misc."   
+    ##  [97] "MM."      "Mr."      "MR."      "Mrs."     "Ms."      "Mt."     
+    ## [103] "Mx."      "N."       "N.V."     "N.Y."     "Nov."     "Nr."     
+    ## [109] "Num."     "O."       "Oct."     "Op."      "Org."     "P."      
+    ## [115] "p.m."     "P.M."     "P.O."     "P.V."     "PC."      "Ph.D."   
+    ## [121] "Phys."    "pp."      "PP."      "Prof."    "Pvt."     "Q."      
+    ## [127] "R."       "R.L."     "R.T."     "Rep."     "Rev."     "S."      
+    ## [133] "S.A."     "S.A.R."   "S.E."     "S.p.A."   "Sep."     "Sept."   
+    ## [139] "Sgt."     "Sq."      "St."      "T."       "U."       "U.S."    
+    ## [145] "U.S.A."   "U.S.C."   "V."       "Var."     "vs."      "VS."     
+    ## [151] "W."       "X."       "Y."       "Yr."      "Z."       "Gov."    
+    ## [157] "Sen."
 
 ``` r
 c0 <- full$text
@@ -237,9 +264,8 @@ udmodel <- udpipe::udpipe_load_model('english-ewt-ud-2.3-181115.udpipe')
 ```
 
 > The `udpipe` package can be used to annotate simple text or token
-> objects. The utility of annotating a token object versus simple text,
-> however, is that the user specifies what constitutes a token and what
-> constitutes a sentence.
+> objects. One benefit of annotating a token object versus simple text
+> is that the user can define token and sentence constitution.
 
 ``` r
 tokens1 <- lapply(tokens, c, '\n')
@@ -304,12 +330,12 @@ collocations0 %>%
 
 | keyword                        | freq |    pmi |
 |:-------------------------------|-----:|-------:|
-| another person will not be     |    3 |  7.906 |
-| moved further                  |    3 |  9.825 |
-| arrival of President Joe Biden |    3 | 10.366 |
-| link on each comment to        |    3 |  5.366 |
-| history behind an              |    3 |  8.046 |
-| likelihood of                  |    3 |  5.146 |
+| but rather                     |    3 |  8.707 |
+| recent years                   |    5 |  9.692 |
+| the closing of                 |    3 |  5.144 |
+| Threats of harming another     |    3 | 10.367 |
+| of harming another person will |    3 |  9.196 |
+| problem reporting              |    3 | 11.370 |
 
 ### Noun phrases
 
@@ -338,13 +364,13 @@ nps1 %>%
   knitr::kable()
 ```
 
-| keyword          | pattern | ngram |   n |
-|:-----------------|:--------|------:|----:|
-| Doug_Traubel     | NN      |     2 |   1 |
-| legal_questions  | AN      |     2 |   1 |
-| health_policy    | NN      |     2 |   1 |
-| New_York         | NN      |     2 |   1 |
-| work_requirement | NN      |     2 |   3 |
+| keyword                 | pattern | ngram |   n |
+|:------------------------|:--------|------:|----:|
+| Right_rally_in_Virginia | ANPN    |     4 |   1 |
+| playboy_image           | NN      |     2 |   1 |
+| conservative_media      | AN      |     2 |   1 |
+| St.\_Luke               | NN      |     2 |   1 |
+| Kathy_Mulkerin          | NN      |     2 |   2 |
 
 ### Tokenizing multiword expressions
 
@@ -450,8 +476,8 @@ predict(model.d2v, 'find',
 ## Text summary via Pagerank
 
 > Here, we use the annotated version of our corpus, and filter PoS to
-> nouns and ajectives; however, non-annotated version of corpus could be
-> used.
+> nouns and adjectives; however, non-annotated version of corpus could
+> be used. Via the `textrank` package.
 
 ``` r
 sent1 <- sentences[, c('sentence_id', 
