@@ -29,11 +29,13 @@ render_toc("/home/jtimm/pCloudDrive/GitHub/git-projects/nlp-cheat-r/README.Rmd")
 
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
-meta <- quicknews::qnews_get_newsmeta('joe biden')
-news <- quicknews::qnews_extract_article(url = meta$link[1:20],
-                                         cores = 7)
+rss1 <- quicknews::qnews_build_rss(x = 'political ideology')
+meta <- quicknews::qnews_strip_rss(rss1) 
+news <- quicknews::qnews_extract_article(url = meta$link[1:10], cores = 7)
 
-strwrap(news$text[2], width = 60)[1:5]
+full <- news %>% left_join(meta)
+
+strwrap(full$text[1], width = 60)[1:5]
 ```
 
 
@@ -41,7 +43,7 @@ strwrap(news$text[2], width = 60)[1:5]
 ### PubMed abstracts
 
 ```{r}
-pmids <- PubmedMTK::pmtk_search_pubmed(search_term = 'medical marijuana', 
+pmids <- PubmedMTK::pmtk_search_pubmed(search_term = 'political ideology', 
                                        fields = c('TIAB','MH'))
 
 abstracts <- PubmedMTK::pmtk_get_records2(pmids = pmids$pmid[1:10], 
@@ -56,7 +58,7 @@ strwrap(abstracts[[1]]$abstract, width = 60)[1:10]
 ### Tweets
 
 ```{r}
-tweets <-  rtweet::search_tweets(q = '#Jan6',
+tweets <-  rtweet::search_tweets(q = 'political ideology',
                                  n = 100,
                                  type = "recent",
                                  include_rts = FALSE,
@@ -73,17 +75,26 @@ strwrap(tweets$text[1], width = 60)
 
 ## Processing
 
-
 ### Sentence splitting
 
-> The `pmtk_split_sentences` function from the `PumbedMTK` package is a simple wrapper to the `corpus::text_split` function.  The function is mindful of stops used in titles/honorifics (eg, Mr., Dr., Ms., etc.) and common acronyms (eg, U.S.A.) when delineating sentences.
+```{r}
+abbrevs <- c(corpus::abbreviations_en, 'Gov.', 'Sen.')
+```
 
 
 ```{r}
-sentences <- PubmedMTK::pmtk_split_sentences(text = news$text,
-                                             doc_id = 1:nrow(news))
+c0 <- full$text
+names(c0) <- full$doc_id
 
-sentences %>% head() %>% knitr::kable()
+sentences <- corpus::text_split(c0, 
+                                filter = corpus::text_filter(
+                                  sent_suppress = abbrevs))
+
+sentences$text <- as.character(sentences$text)
+sentences$uid <- paste0(sentences$parent, '.', sentences$index)
+colnames(sentences)[1:2] <- c('doc_id', 'sentence_id')
+
+sentences %>% select(sentence_id, text) %>% head() %>% knitr::kable()
 ```
 
 
@@ -100,7 +111,7 @@ tokens <- corpus::text_tokens(sentences$text,
     map_case = FALSE, 
     map_quote = TRUE,
     remove_ignorable = TRUE,
-    combine = c(corpus::abbreviations_en),
+    combine = abbrevs,
     stemmer = NULL,
     stem_dropped = FALSE,
     stem_except = NULL,
@@ -114,7 +125,7 @@ tokens <- corpus::text_tokens(sentences$text,
     sent_crlf = FALSE)
   )
 
-names(tokens) <-sentences$doc_id
+names(tokens) <-sentences$uid
 tokens[[1]]
 ```
 
@@ -122,11 +133,19 @@ tokens[[1]]
 
 ### Tokens to data frame
 
-> A simple approach to reshaping token objects.  
+> A simple approach to reshaping token objects.  Via the `textshape` package.
 
 ```{r}
-tokens_df <- PubmedMTK::pmtk_cast_tokens(tokens)
-tokens_df %>%  slice(1:10)
+df <- textshape::tidy_list(tokens, 
+                           id.name = 'doc_id', 
+                           content.name = 'token')
+
+####
+df[, sentence_id := gsub('^.*\\.', '', doc_id)]
+df[, doc_id := gsub('\\..*$', '', doc_id)]
+df[, token_id := data.table::rowid(doc_id)]
+
+df %>%  slice(1:10)
 ```
 
 
@@ -134,7 +153,7 @@ tokens_df %>%  slice(1:10)
 ### Vocabulary
 
 ```{r}
-vocab <- tokens_df[, list(text_freq = .N, 
+vocab <- df[, list(text_freq = .N, 
                           doc_freq = length(unique(doc_id))), 
               by = list(token)]
 
@@ -156,24 +175,22 @@ udmodel <- udpipe::udpipe_load_model('english-ewt-ud-2.3-181115.udpipe')
 ```
 
 
-> The `udpipe` package can be used to annotate simple text or token objects.  The utility of annotating a token object versus simple text, however, is that the user specifies what constitutes a token and what constitutes a sentence.  
-
-
-> One issue with token objects is that sentence info is less obvious to annotators.  The `pmtk_rebuild_sentences` function hacks around this by adding a newline character to the end of every tokenized sentence in the corpus, and aggregating the sentence-level tokens to document-level.  
-
+> The `udpipe` package can be used to annotate simple text or token objects.  The utility of annotating a token object versus simple text, however, is that the user specifies what constitutes a token and what constitutes a sentence. 
 
 ```{r}
-tokens1 <- PubmedMTK::pmtk_rebuild_sentences(x = tokens,
-                                             sentence_id = names(tokens))
+tokens1 <- lapply(tokens, c, '\n')
+names(tokens1) <- gsub('\\..*$', '', names(tokens1))
 
-
+tokens2 <- sapply(unique(names(tokens1)), 
+       function(z) unname(unlist(tokens1[names(tokens1) == z])), 
+       simplify=FALSE)
 ```
 
 
 
 ```{r message=FALSE, warning=FALSE}
 annotation <- udpipe::udpipe(object = udmodel,
-                             x = tokens1,
+                             x = tokens2,
                              tagger = 'default', 
                              parser = 'default')
 
@@ -244,6 +261,8 @@ nps1 %>%
 ```
 
 
+
+
 ### Tokenizing multiword expressions
 
 > Recode noun phrases identified above as a single token in annotation data frame.
@@ -285,13 +304,15 @@ str(dtm)
 ```
 
 
+
+
 ### Rebuilding text
 
 ```{r}
 new_text <- data.table::setDT(annotation0)[, list(text = paste(newness, collapse = " ")), 
                                   by = doc_id]
 
-strwrap(new_text$text[5], width = 60)[1:5]
+strwrap(new_text$text[1], width = 60)[1:5]
 ```
 
 
@@ -321,43 +342,41 @@ both <- do.call(rbind, list(embedding.docs, embedding.words))
 > doc2vec is a powerful NLP tool because it projects documents and terms in the same embedding space.  
 
 ```{r}
-predict(model.d2v, 'Biden', 
+predict(model.d2v, 'find', 
         type = "nearest",
         which = "word2word")[[1]]
 ```
 
 
 
+## Text summary via Pagerank
+
+
 ## Search
 
 ### Search in context
 
-> Based on the `corpus::text_locate` function.
-
 ```{r}
-tokens2 <- corpus::text_tokens(news$text,
-              filter = corpus::text_filter(map_case = FALSE))
-
-egs <- PubmedMTK::pmtk_locate_term(text = tokens2,
-                                   doc_id = 1:length(tokens2),
-                                   term = c('joe biden'),
-                                   stem = F,
-                                   window = 10)
-
-egs %>% head() %>% knitr::kable()
+ctrialsgov::ctgov_kwic(term = 'political ideology|party affiliation', 
+                       text = abstracts[[1]]$abstract, 
+                       names = abstracts[[1]]$pmid, 
+                       width = 35,
+                       use_color = T,
+                       output = 'cat') #'data.frame'
 ```
+
 
 
 ### Sentences containing X
 
 ```{r}
-jrb_sentences <- tokens_df[, if(any(token == 'Biden')) .SD, 
-                    by = list(doc_id,sentence_id)]
+eg_sentences <- df[, if(any(token %in% c('QAnon'))) .SD, 
+                    by = list(doc_id, sentence_id)]
 
-jrb_sentences0 <- jrb_sentences[, list(text = paste(token, collapse = " ")), 
+eg_sentences0 <- eg_sentences[, list(text = paste(token, collapse = " ")), 
                                 by = list(doc_id,sentence_id)]
 
-jrb_sentences0 %>% head() %>% knitr::kable()
+eg_sentences0 %>% head() %>% knitr::kable()
 ```
 
 

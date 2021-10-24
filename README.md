@@ -26,6 +26,7 @@ self.
         -   [Annotation to DTM](#annotation-to-dtm)
         -   [Rebuilding text](#rebuilding-text)
     -   [doc2vec](#doc2vec)
+    -   [Text summary via Pagerank](#text-summary-via-pagerank)
     -   [Search](#search)
         -   [Search in context](#search-in-context)
         -   [Sentences containing X](#sentences-containing-x)
@@ -39,27 +40,29 @@ self.
 
 ``` r
 library(tidyverse)
-meta <- quicknews::qnews_get_newsmeta('joe biden')
-news <- quicknews::qnews_extract_article(url = meta$link[1:20],
-                                         cores = 7)
+rss1 <- quicknews::qnews_build_rss(x = 'political ideology')
+meta <- quicknews::qnews_strip_rss(rss1) 
+news <- quicknews::qnews_extract_article(url = meta$link[1:10], cores = 7)
 
-strwrap(news$text[2], width = 60)[1:5]
+full <- news %>% left_join(meta)
+
+strwrap(full$text[1], width = 60)[1:5]
 ```
 
-    ## [1] "Joe Biden has been attacked by conservative pundits for"  
-    ## [2] "appearing to stumble when naming the director of the"     
-    ## [3] "Federal Emergency Management Agency (FEMA) during a press"
-    ## [4] "briefing on Sunday. Biden appeared to hesitate when"      
-    ## [5] "addressing FEMA director Deanne Criswell during a press"
+    ## [1] "Anti-establishment sentiments are a key component of"       
+    ## [2] "political opinion and behavior in the United States and are"
+    ## [3] "distinct from traditional indicators of political ideology,"
+    ## [4] "according to new research. The findings indicate"           
+    ## [5] "anti-establishment viewpoints have played a key role in"
 
 ### PubMed abstracts
 
 ``` r
-pmids <- PubmedMTK::pmtk_search_pubmed(search_term = 'medical marijuana', 
+pmids <- PubmedMTK::pmtk_search_pubmed(search_term = 'political ideology', 
                                        fields = c('TIAB','MH'))
 ```
 
-    ## [1] "medical marijuana[TIAB] OR medical marijuana[MH]: 2224 records"
+    ## [1] "political ideology[TIAB] OR political ideology[MH]: 498 records"
 
 ``` r
 abstracts <- PubmedMTK::pmtk_get_records2(pmids = pmids$pmid[1:10], 
@@ -70,21 +73,21 @@ abstracts <- PubmedMTK::pmtk_get_records2(pmids = pmids$pmid[1:10],
 strwrap(abstracts[[1]]$abstract, width = 60)[1:10]
 ```
 
-    ##  [1] "The authors sought to estimate the prevalence of"           
-    ##  [2] "past-12-month and lifetime cannabis use and cannabis use"   
-    ##  [3] "disorder among U.S. veterans; to describe demographic,"     
-    ##  [4] "substance use disorder, and psychiatric disorder correlates"
-    ##  [5] "of nonmedical cannabis use and cannabis use disorder; and"  
-    ##  [6] "to explore differences in cannabis use and cannabis use"    
-    ##  [7] "disorder prevalence among veterans in states with and"      
-    ##  [8] "without medical marijuana laws. Participants were 3,119"    
-    ##  [9] "respondents in the 2012-2013 National Epidemiologic Survey" 
-    ## [10] "on Alcohol and Related Conditions-III (NESARC-III) who"
+    ##  [1] "This article explores the moral dimensions of the clinical" 
+    ##  [2] "narration of suffering in a highly political context. Based"
+    ##  [3] "on an ethnographic analysis of psychotherapists'"           
+    ##  [4] "discussions of a clinical case related to the Israeli"      
+    ##  [5] "evacuation from Gaza, I illustrate how the care providers"  
+    ##  [6] "navigate competing moral logics while explaining the"       
+    ##  [7] "reasons for the patient's experience. Capturing moments of" 
+    ##  [8] "the simultaneous appearance of different explanatory"       
+    ##  [9] "models, informed by contradictory moral grammars, during"   
+    ## [10] "the process of clinical reasoning allowed me to obtain a"
 
 ### Tweets
 
 ``` r
-tweets <-  rtweet::search_tweets(q = '#Jan6',
+tweets <-  rtweet::search_tweets(q = 'political ideology',
                                  n = 100,
                                  type = "recent",
                                  include_rts = FALSE,
@@ -96,39 +99,46 @@ tweets <-  rtweet::search_tweets(q = '#Jan6',
 strwrap(tweets$text[1], width = 60)
 ```
 
-    ## [1] "Good. The far Right has behaved traitorously in labeling"  
-    ## [2] "Babbitt some kind of martyr. It's this officer and their"  
-    ## [3] "family who have made the real sacrifice. We thank them for"
-    ## [4] "their service and stand with them always."                 
-    ## [5] ""                                                          
-    ## [6] "#Jan6 #InformationWarfare #Trumpistan"                     
-    ## [7] ""                                                          
-    ## [8] "https://t.co/6JHcGTBfPb"
+    ## [1] "@veritasium333 @PraticOslo @CantYeetBabari Abdul Kalam Azad"
+    ## [2] "opposed separate Muslim electorates for Muslims, and"       
+    ## [3] "suppored the Nehru Report"                                  
+    ## [4] ""                                                           
+    ## [5] "he opposed the political rights for Muslims, for the sake"  
+    ## [6] "of a centralized india, because for him \"revolutionary\""  
+    ## [7] "nationalist ideology was more important than the right of"  
+    ## [8] "muslims"
 
 ## Processing
 
 ### Sentence splitting
 
-> The `pmtk_split_sentences` function from the `PumbedMTK` package is a
-> simple wrapper to the `corpus::text_split` function. The function is
-> mindful of stops used in titles/honorifics (eg, Mr., Dr., Ms., etc.)
-> and common acronyms (eg, U.S.A.) when delineating sentences.
-
 ``` r
-sentences <- PubmedMTK::pmtk_split_sentences(text = news$text,
-                                             doc_id = 1:nrow(news))
-
-sentences %>% head() %>% knitr::kable()
+abbrevs <- c(corpus::abbreviations_en, 'Gov.', 'Sen.')
 ```
 
-| doc_id | text                                                                                                                                                                                                                             |
-|:-------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 1.1    | Foreign policy experts are asking how decades of foreign policy experience could have led President Biden to oversee such a chaotic withdrawal.                                                                                  |
-| 1.2    | In January 2002, when the U.S. Embassy in Afghanistan reopened for the first time since 1989, Ambassador Ryan Crocker said the first member of Congress to visit him in Kabul was the then-senator from Delaware, Joe Biden.     |
-| 1.3    | “One of his really great qualities, I thought, was his driving need to see things for himself … and I just really respected that,” Crocker said, pointing out that Biden also visited Iraq many times.                           |
-| 1.4    | Crocker had considered the president an old-school internationalist, in the vein of presidents going back to World War II who believed in U.S. leadership on the global stage and spearheaded large international organizations. |
-| 1.5    | But with the havoc unfolding in Afghanistan, Crocker says he can no longer make sense of the man he once thought would restore American credibility and international order after President Trump.                               |
-| 1.6    | "What have they done with the real Joe Biden?                                                                                                                                                                                    |
+``` r
+c0 <- full$text
+names(c0) <- full$doc_id
+
+sentences <- corpus::text_split(c0, 
+                                filter = corpus::text_filter(
+                                  sent_suppress = abbrevs))
+
+sentences$text <- as.character(sentences$text)
+sentences$uid <- paste0(sentences$parent, '.', sentences$index)
+colnames(sentences)[1:2] <- c('doc_id', 'sentence_id')
+
+sentences %>% select(sentence_id, text) %>% head() %>% knitr::kable()
+```
+
+| sentence_id | text                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|           1 | Anti-establishment sentiments are a key component of political opinion and behavior in the United States and are distinct from traditional indicators of political ideology, according to new research.                                                                                                                                                                                                                                                                                                    |
+|           2 | The findings indicate anti-establishment viewpoints have played a key role in some beliefs that came to prominence during the Trump era, such as the QAnon movement.                                                                                                                                                                                                                                                                                                                                       |
+|           3 | The research has been published in the American Journal of Political Science and The Forum.                                                                                                                                                                                                                                                                                                                                                                                                                |
+|           4 | “I was interested in this project because it increasingly seemed to me that polarization and political identities were increasingly bearing the brunt of the blame –– perhaps erroneously –– for socially undesirable beliefs and actions that were probably the product of other orientations, like conspiracy thinking and a tendency to view politics as a struggle between good and evil,” said co-author Adam M. Enders, an assistant professor of political science at the University of Louisville. |
+|           5 | “American politics seems to be different than in previous decades and we wanted to know why,” added co-author Joseph E. Uscinski of the University of Miami.                                                                                                                                                                                                                                                                                                                                               |
+|           6 | “Many people blame current political problems — conspiracy theories, fake news, political violence — on polarization.                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ### Tokenization
 
@@ -142,7 +152,7 @@ tokens <- corpus::text_tokens(sentences$text,
     map_case = FALSE, 
     map_quote = TRUE,
     remove_ignorable = TRUE,
-    combine = c(corpus::abbreviations_en),
+    combine = abbrevs,
     stemmer = NULL,
     stem_dropped = FALSE,
     stem_except = NULL,
@@ -156,54 +166,68 @@ tokens <- corpus::text_tokens(sentences$text,
     sent_crlf = FALSE)
   )
 
-names(tokens) <-sentences$doc_id
+names(tokens) <-sentences$uid
 tokens[[1]]
 ```
 
-    ##  [1] "Foreign"    "policy"     "experts"    "are"        "asking"    
-    ##  [6] "how"        "decades"    "of"         "foreign"    "policy"    
-    ## [11] "experience" "could"      "have"       "led"        "President" 
-    ## [16] "Biden"      "to"         "oversee"    "such"       "a"         
-    ## [21] "chaotic"    "withdrawal" "."
+    ##  [1] "Anti-establishment" "sentiments"         "are"               
+    ##  [4] "a"                  "key"                "component"         
+    ##  [7] "of"                 "political"          "opinion"           
+    ## [10] "and"                "behavior"           "in"                
+    ## [13] "the"                "United"             "States"            
+    ## [16] "and"                "are"                "distinct"          
+    ## [19] "from"               "traditional"        "indicators"        
+    ## [22] "of"                 "political"          "ideology"          
+    ## [25] ","                  "according"          "to"                
+    ## [28] "new"                "research"           "."
 
 ### Tokens to data frame
 
-> A simple approach to reshaping token objects.
+> A simple approach to reshaping token objects. Via the `textshape`
+> package.
 
 ``` r
-tokens_df <- PubmedMTK::pmtk_cast_tokens(tokens)
-tokens_df %>%  slice(1:10)
+df <- textshape::tidy_list(tokens, 
+                           id.name = 'doc_id', 
+                           content.name = 'token')
+
+####
+df[, sentence_id := gsub('^.*\\.', '', doc_id)]
+df[, doc_id := gsub('\\..*$', '', doc_id)]
+df[, token_id := data.table::rowid(doc_id)]
+
+df %>%  slice(1:10)
 ```
 
-    ##     doc_id sentence_id token_id   token
-    ##  1:      1           1        1 Foreign
-    ##  2:      1           1        2  policy
-    ##  3:      1           1        3 experts
-    ##  4:      1           1        4     are
-    ##  5:      1           1        5  asking
-    ##  6:      1           1        6     how
-    ##  7:      1           1        7 decades
-    ##  8:      1           1        8      of
-    ##  9:      1           1        9 foreign
-    ## 10:      1           1       10  policy
+    ##     doc_id              token sentence_id token_id
+    ##  1:      1 Anti-establishment           1        1
+    ##  2:      1         sentiments           1        2
+    ##  3:      1                are           1        3
+    ##  4:      1                  a           1        4
+    ##  5:      1                key           1        5
+    ##  6:      1          component           1        6
+    ##  7:      1                 of           1        7
+    ##  8:      1          political           1        8
+    ##  9:      1            opinion           1        9
+    ## 10:      1                and           1       10
 
 ### Vocabulary
 
 ``` r
-vocab <- tokens_df[, list(text_freq = .N, 
+vocab <- df[, list(text_freq = .N, 
                           doc_freq = length(unique(doc_id))), 
               by = list(token)]
 
 head(vocab)
 ```
 
-    ##      token text_freq doc_freq
-    ## 1: Foreign         3        2
-    ## 2:  policy        24        6
-    ## 3: experts         4        2
-    ## 4:     are        56       13
-    ## 5:  asking         1        1
-    ## 6:     how        12        6
+    ##                 token text_freq doc_freq
+    ## 1: Anti-establishment         2        1
+    ## 2:         sentiments         3        1
+    ## 3:                are        27        6
+    ## 4:                  a       116        9
+    ## 5:                key         2        1
+    ## 6:          component         1        1
 
 ## Annotation
 
@@ -217,20 +241,18 @@ udmodel <- udpipe::udpipe_load_model('english-ewt-ud-2.3-181115.udpipe')
 > however, is that the user specifies what constitutes a token and what
 > constitutes a sentence.
 
-> One issue with token objects is that sentence info is less obvious to
-> annotators. The `pmtk_rebuild_sentences` function hacks around this by
-> adding a newline character to the end of every tokenized sentence in
-> the corpus, and aggregating the sentence-level tokens to
-> document-level.
-
 ``` r
-tokens1 <- PubmedMTK::pmtk_rebuild_sentences(x = tokens,
-                                             sentence_id = names(tokens))
+tokens1 <- lapply(tokens, c, '\n')
+names(tokens1) <- gsub('\\..*$', '', names(tokens1))
+
+tokens2 <- sapply(unique(names(tokens1)), 
+       function(z) unname(unlist(tokens1[names(tokens1) == z])), 
+       simplify=FALSE)
 ```
 
 ``` r
 annotation <- udpipe::udpipe(object = udmodel,
-                             x = tokens1,
+                             x = tokens2,
                              tagger = 'default', 
                              parser = 'default')
 
@@ -250,14 +272,14 @@ annotation %>%
   knitr::kable()
 ```
 
-| doc_id | sentence_id | token_id | token   | lemma   | upos | xpos |
-|:-------|------------:|:---------|:--------|:--------|:-----|:-----|
-| 1      |           1 | 1        | Foreign | foreign | ADJ  | JJ   |
-| 1      |           1 | 2        | policy  | policy  | NOUN | NN   |
-| 1      |           1 | 3        | experts | expert  | NOUN | NNS  |
-| 1      |           1 | 4        | are     | be      | AUX  | VBP  |
-| 1      |           1 | 5        | asking  | ask     | VERB | VBG  |
-| 1      |           1 | 6        | how     | how     | ADV  | WRB  |
+| doc_id | sentence_id | token_id | token              | lemma              | upos | xpos |
+|:-------|------------:|:---------|:-------------------|:-------------------|:-----|:-----|
+| 1      |           1 | 1        | Anti-establishment | Anti-establishment | ADJ  | JJ   |
+| 1      |           1 | 2        | sentiments         | sentiment          | NOUN | NNS  |
+| 1      |           1 | 3        | are                | be                 | AUX  | VBP  |
+| 1      |           1 | 4        | a                  | a                  | DET  | DT   |
+| 1      |           1 | 5        | key                | key                | ADJ  | JJ   |
+| 1      |           1 | 6        | component          | component          | NOUN | NN   |
 
 ## Multiword expressions
 
@@ -280,14 +302,14 @@ collocations0 %>%
   knitr::kable()
 ```
 
-| keyword                   | freq |    pmi |
-|:--------------------------|-----:|-------:|
-| corporate tax             |    3 |  8.905 |
-| could be                  |    3 |  5.135 |
-| you failed                |    5 |  6.213 |
-| look like                 |    3 |  8.436 |
-| when we                   |    3 |  5.511 |
-| national security adviser |    4 | 11.018 |
+| keyword           | freq |    pmi |
+|:------------------|-----:|-------:|
+| the social media  |    3 |  8.397 |
+| at the University |    4 |  8.713 |
+| he was            |    3 |  5.212 |
+| general election  |    4 |  8.867 |
+| According to      |    3 |  5.402 |
+| United States     |    3 | 10.300 |
 
 ### Noun phrases
 
@@ -318,11 +340,11 @@ nps1 %>%
 
 | keyword                | pattern | ngram |   n |
 |:-----------------------|:--------|------:|----:|
-| first_half-year        | AN      |     2 |   1 |
-| Hamid_Karzai_Airport   | NNN     |     3 |   1 |
-| Biden’s_foreign_policy | NAN     |     3 |   1 |
-| income_tax_credit      | NNN     |     3 |   1 |
-| chaotic_US_exit        | ANN     |     3 |   1 |
+| Staff_Machine_Learning | NNN     |     3 |   1 |
+| 22nd_Prime             | NN      |     2 |   1 |
+| Home_timeline          | NN      |     2 |   1 |
+| explicit_permission    | AN      |     2 |   1 |
+| 1,000_voters           | AN      |     2 |   1 |
 
 ### Tokenizing multiword expressions
 
@@ -346,14 +368,14 @@ annotation %>%
   knitr::kable()
 ```
 
-| doc_id | token   | lemma   | upos | xpos | newness                   |
-|:-------|:--------|:--------|:-----|:-----|:--------------------------|
-| 1      | Foreign | foreign | ADJ  | JJ   | foreign_policy_experts    |
-| 1      | foreign | foreign | ADJ  | JJ   | foreign_policy_experience |
-| 1      | chaotic | chaotic | ADJ  | JJ   | chaotic_withdrawal        |
-| 1      | first   | first   | ADJ  | JJ   | first_time                |
-| 1      | first   | first   | ADJ  | JJ   | first_member              |
-| 1      | great   | great   | ADJ  | JJ   | great_qualities           |
+| doc_id | token              | lemma              | upos | xpos | newness                                      |
+|:-------|:-------------------|:-------------------|:-----|:-----|:---------------------------------------------|
+| 1      | Anti-establishment | Anti-establishment | ADJ  | JJ   | anti-establishment_sentiments                |
+| 1      | key                | key                | ADJ  | JJ   | key_component_of_political_opinion           |
+| 1      | traditional        | traditional        | ADJ  | JJ   | traditional_indicators_of_political_ideology |
+| 1      | new                | new                | ADJ  | JJ   | new_research                                 |
+| 1      | anti-establishment | anti-establishment | ADJ  | JJ   | anti-establishment_viewpoints                |
+| 1      | key                | key                | ADJ  | JJ   | key_role_in_some_beliefs                     |
 
 ### Annotation to DTM
 
@@ -375,13 +397,13 @@ str(dtm)
 ```
 
     ## Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-    ##   ..@ i       : int [1:4845] 0 2 3 5 6 7 8 9 10 11 ...
-    ##   ..@ p       : int [1:2672] 0 15 34 44 52 71 83 85 87 88 ...
-    ##   ..@ Dim     : int [1:2] 19 2671
+    ##   ..@ i       : int [1:2501] 0 4 5 6 7 0 1 2 3 4 ...
+    ##   ..@ p       : int [1:1718] 0 5 14 18 22 24 33 39 45 50 ...
+    ##   ..@ Dim     : int [1:2] 9 1717
     ##   ..@ Dimnames:List of 2
-    ##   .. ..$ : chr [1:19] "1" "10" "11" "12" ...
-    ##   .. ..$ : chr [1:2671] "-" "," ":" "?" ...
-    ##   ..@ x       : num [1:4845] 4 2 1 2 2 1 2 2 4 2 ...
+    ##   .. ..$ : chr [1:9] "1" "2" "3" "4" ...
+    ##   .. ..$ : chr [1:1717] "-" "," ";" ":" ...
+    ##   ..@ x       : num [1:2501] 10 2 3 1 2 79 30 48 54 9 ...
     ##   ..@ factors : list()
 
 ### Rebuilding text
@@ -390,14 +412,14 @@ str(dtm)
 new_text <- data.table::setDT(annotation0)[, list(text = paste(newness, collapse = " ")), 
                                   by = doc_id]
 
-strwrap(new_text$text[5], width = 60)[1:5]
+strwrap(new_text$text[1], width = 60)[1:5]
 ```
 
-    ## [1] "not so many_weeks ago , a person who doesnot like I or this"
-    ## [2] "column write a email to my boss at the tv station in a"     
-    ## [3] "attempt to get I into trouble . he say , \" you know he' a" 
-    ## [4] "republican_right ? why be he allow to do the news ? \" now" 
-    ## [5] "we can dissect that short_message_in_several_ways but let I"
+    ## [1] "anti-establishment_sentiments be a"                      
+    ## [2] "key_component_of_political_opinion and behavior in the"  
+    ## [3] "United States and be distinct from"                      
+    ## [4] "traditional_indicators_of_political_ideology , accord to"
+    ## [5] "new_research . the finding indicate"
 
 ## doc2vec
 
@@ -424,71 +446,67 @@ both <- do.call(rbind, list(embedding.docs, embedding.words))
 > in the same embedding space.
 
 ``` r
-predict(model.d2v, 'Biden', 
+predict(model.d2v, 'find', 
         type = "nearest",
         which = "word2word")[[1]]
 ```
 
-    ##    term1     term2 similarity rank
-    ## 1  Biden    appear  0.9466130    1
-    ## 2  Biden     speak  0.9162854    2
-    ## 3  Biden   Bongino  0.9145614    3
-    ## 4  Biden   Sánchez  0.9041641    4
-    ## 5  Biden  director  0.9027559    5
-    ## 6  Biden    speech  0.9002235    6
-    ## 7  Biden last_week  0.8999076    7
-    ## 8  Biden    decide  0.8962178    8
-    ## 9  Biden         )  0.8948097    9
-    ## 10 Biden        he  0.8922988   10
+    ##    term1      term2 similarity rank
+    ## 1   find researcher  0.9557187    1
+    ## 2   find       show  0.9496294    2
+    ## 3   find  exemption  0.9461185    3
+    ## 4   find    compare  0.9441468    4
+    ## 5   find        not  0.9369903    5
+    ## 6   find     either  0.9322490    6
+    ## 7   find  meanwhile  0.9292600    7
+    ## 8   find       role  0.9269795    8
+    ## 9   find    overall  0.9248223    9
+    ## 10  find       even  0.9078073   10
+
+## Text summary via Pagerank
 
 ## Search
 
 ### Search in context
 
-> Based on the `corpus::text_locate` function.
-
 ``` r
-tokens2 <- corpus::text_tokens(news$text,
-              filter = corpus::text_filter(map_case = FALSE))
-
-egs <- PubmedMTK::pmtk_locate_term(text = tokens2,
-                                   doc_id = 1:length(tokens2),
-                                   term = c('joe biden'),
-                                   stem = F,
-                                   window = 10)
-
-egs %>% head() %>% knitr::kable()
+ctrialsgov::ctgov_kwic(term = 'political ideology|party affiliation', 
+                       text = abstracts[[1]]$abstract, 
+                       names = abstracts[[1]]$pmid, 
+                       width = 35,
+                       use_color = T,
+                       output = 'cat') #'data.frame'
 ```
 
-| doc_id | lhs                                                         | instance  | rhs                                                                     |
-|-------:|:------------------------------------------------------------|:----------|:------------------------------------------------------------------------|
-|      1 | to visit him in Kabul was the then-senator from Delaware ,  | Joe Biden | . " One of his really great qualities , I thought                       |
-|      1 | President Trump . " What have they done with the real       | Joe Biden | ? And who is this guy up there now ? "                                  |
-|      1 | reengage with America’s allies around the world . " I think | Joe Biden | sees Afghanistan as a distraction from the defining fight that he’s     |
-|      2 | NA                                                          | Joe Biden | has been attacked by conservative pundits for appearing to stumble when |
-|      2 | he said about 20 seconds into the live conference . "       | Joe Biden | appears to struggle to remember his FEMA administrator’s name , "       |
-|      2 | test now , hearings in Congress now . " " Did               | Joe Biden | just forget his FEMA director’s name ? " managing editor of             |
+    ## [34665062]  a priori moral values informed by [31mpolitical ideology[39m. This perspective is particularly 
+    ## [34630247]                       The dominant [31mpolitical ideology[39m of recent decades, neoliberalism, 
+    ## [34605280] ity, positive COVID diagnosis, and [31mpolitical ideology[39m. Univariate analysis and logistic 
+    ## [34594280] pers, blogs, and social networks), [31mpolitical ideology[39m, vote, trust in institutions, and 
+    ## [34592973] tion. As in studies of the public, [31mpolitical ideology[39m and the observation of local clima
+    ## [34580214]  variables and only weakly reflect [31mpolitical ideology[39m. Moral cosmopolitanism also differ
+    ## [34545946]  when assessed together, political [31mparty affiliation[39m (e.g., Republican, Democrat) but n
+    ## [34545946] .g., Republican, Democrat) but not [31mpolitical ideology[39m (e.g., conservative, liberal) pred
+    ## [34545946]  When assessed together, political [31mparty affiliation[39m but not political ideology signifi
+    ## [34545946] olitical party affiliation but not [31mpolitical ideology[39m significantly predicted face mask 
+    ## [34508051] ucts in relationships moderated by [31mpolitical ideology[39m. Public health messages targeting
 
 ### Sentences containing X
 
 ``` r
-jrb_sentences <- tokens_df[, if(any(token == 'Biden')) .SD, 
-                    by = list(doc_id,sentence_id)]
+eg_sentences <- df[, if(any(token %in% c('QAnon'))) .SD, 
+                    by = list(doc_id, sentence_id)]
 
-jrb_sentences0 <- jrb_sentences[, list(text = paste(token, collapse = " ")), 
+eg_sentences0 <- eg_sentences[, list(text = paste(token, collapse = " ")), 
                                 by = list(doc_id,sentence_id)]
 
-jrb_sentences0 %>% head() %>% knitr::kable()
+eg_sentences0 %>% head() %>% knitr::kable()
 ```
 
-| doc_id | sentence_id | text                                                                                                                                                                                                                             |
-|:-------|:------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 1      | 1           | Foreign policy experts are asking how decades of foreign policy experience could have led President Biden to oversee such a chaotic withdrawal .                                                                                 |
-| 1      | 2           | In January 2002 , when the U.S. Embassy in Afghanistan reopened for the first time since 1989 , Ambassador Ryan Crocker said the first member of Congress to visit him in Kabul was the then-senator from Delaware , Joe Biden . |
-| 1      | 3           | " One of his really great qualities , I thought , was his driving need to see things for himself . . . and I just really respected that , " Crocker said , pointing out that Biden also visited Iraq many times .                |
-| 1      | 6           | " What have they done with the real Joe Biden ?                                                                                                                                                                                  |
-| 1      | 17          | Biden blamed the former Afghan government for pushing against an earlier start to evacuations .                                                                                                                                  |
-| 1      | 31          | Biden " has always had strong views about our role in Afghanistan , " Panetta said .                                                                                                                                             |
+| doc_id | sentence_id | text                                                                                                                                                                                                                                                                                                                                      |
+|:-------|:------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1      | 2           | The findings indicate anti-establishment viewpoints have played a key role in some beliefs that came to prominence during the Trump era , such as the QAnon movement .                                                                                                                                                                    |
+| 1      | 26          | Ender and Uscinski’s research published in The Forum , based on a national survey of 1,947 U.S. adults conducted between October 8 and 21 , 2020 , found that anti-establishment orientations were also strongly related to the endorsement of conspiracies related to COVID-19 , QAnon , Donald Trump , and the 2020 election .          |
+| 1      | 27          | For example , agreement with statements such as “ Satanic sex traffickers control the government ” ( QAnon ) and “ There is a conspiracy to stop the U.S. Post Office from processing mail-in ballots ” ( election fraud ) were weakly related to political ideology , but strongly related to having an anti-establishment orientation . |
 
 ## Odds
 
@@ -503,6 +521,6 @@ textplot::textplot_dependencyparser(sent_depend,
                                     subtitle = NULL)
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-23-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-24-1.png)
 
 ## Summary
