@@ -99,14 +99,10 @@ tweets <-  rtweet::search_tweets(q = 'political ideology',
 strwrap(tweets$text[1], width = 60)
 ```
 
-    ## [1] "@veritasium333 @PraticOslo @CantYeetBabari Abdul Kalam Azad"
-    ## [2] "opposed separate Muslim electorates for Muslims, and"       
-    ## [3] "suppored the Nehru Report"                                  
-    ## [4] ""                                                           
-    ## [5] "he opposed the political rights for Muslims, for the sake"  
-    ## [6] "of a centralized india, because for him \"revolutionary\""  
-    ## [7] "nationalist ideology was more important than the right of"  
-    ## [8] "muslims"
+    ## [1] "Scientists need to study her. She's a rare political"       
+    ## [2] "creature that has no ideology, save for an instinctive need"
+    ## [3] "to take politically unpopular positions that hurt poor"     
+    ## [4] "people"
 
 ## Processing
 
@@ -302,14 +298,14 @@ collocations0 %>%
   knitr::kable()
 ```
 
-| keyword           | freq |    pmi |
-|:------------------|-----:|-------:|
-| the social media  |    3 |  8.397 |
-| at the University |    4 |  8.713 |
-| he was            |    3 |  5.212 |
-| general election  |    4 |  8.867 |
-| According to      |    3 |  5.402 |
-| United States     |    3 | 10.300 |
+| keyword              | freq |    pmi |
+|:---------------------|-----:|-------:|
+| published in         |    3 |  5.814 |
+| to me                |    3 |  5.402 |
+| better understand    |    3 | 10.622 |
+| Imran Khan           |    6 |  9.300 |
+| in the United States |    3 | 10.617 |
+| has been             |    5 |  8.073 |
 
 ### Noun phrases
 
@@ -338,13 +334,13 @@ nps1 %>%
   knitr::kable()
 ```
 
-| keyword                | pattern | ngram |   n |
-|:-----------------------|:--------|------:|----:|
-| Staff_Machine_Learning | NNN     |     3 |   1 |
-| 22nd_Prime             | NN      |     2 |   1 |
-| Home_timeline          | NN      |     2 |   1 |
-| explicit_permission    | AN      |     2 |   1 |
-| 1,000_voters           | AN      |     2 |   1 |
+| keyword                     | pattern | ngram |   n |
+|:----------------------------|:--------|------:|----:|
+| informal_far-right_movement | ANN     |     3 |   1 |
+| social_media                | AN      |     2 |   9 |
+| Trump_page                  | NN      |     2 |   1 |
+| social_media_platform       | ANN     |     3 |   2 |
+| years_Imran                 | NN      |     2 |   1 |
 
 ### Tokenizing multiword expressions
 
@@ -360,22 +356,7 @@ annotation$newness <- udpipe::txt_recode_ngram(tolower(annotation$token),
                                                compound = c(nps1$keyword),
                                                ngram = c(nps1$ngram),
                                                sep = '_')
-
-annotation %>%
-  select(doc_id, token:xpos, newness) %>%
-  filter(grepl('_', newness)) %>%
-  head() %>%
-  knitr::kable()
 ```
-
-| doc_id | token              | lemma              | upos | xpos | newness                                      |
-|:-------|:-------------------|:-------------------|:-----|:-----|:---------------------------------------------|
-| 1      | Anti-establishment | Anti-establishment | ADJ  | JJ   | anti-establishment_sentiments                |
-| 1      | key                | key                | ADJ  | JJ   | key_component_of_political_opinion           |
-| 1      | traditional        | traditional        | ADJ  | JJ   | traditional_indicators_of_political_ideology |
-| 1      | new                | new                | ADJ  | JJ   | new_research                                 |
-| 1      | anti-establishment | anti-establishment | ADJ  | JJ   | anti-establishment_viewpoints                |
-| 1      | key                | key                | ADJ  | JJ   | key_role_in_some_beliefs                     |
 
 ### Annotation to DTM
 
@@ -474,21 +455,21 @@ ctrialsgov::ctgov_kwic(term = 'political ideology|party affiliation',
                        text = abstracts[[1]]$abstract, 
                        names = abstracts[[1]]$pmid, 
                        width = 35,
-                       use_color = T,
+                       #use_color = T,
                        output = 'cat') #'data.frame'
 ```
 
-    ## [34665062]  a priori moral values informed by [31mpolitical ideology[39m. This perspective is particularly 
-    ## [34630247]                       The dominant [31mpolitical ideology[39m of recent decades, neoliberalism, 
-    ## [34605280] ity, positive COVID diagnosis, and [31mpolitical ideology[39m. Univariate analysis and logistic 
-    ## [34594280] pers, blogs, and social networks), [31mpolitical ideology[39m, vote, trust in institutions, and 
-    ## [34592973] tion. As in studies of the public, [31mpolitical ideology[39m and the observation of local clima
-    ## [34580214]  variables and only weakly reflect [31mpolitical ideology[39m. Moral cosmopolitanism also differ
-    ## [34545946]  when assessed together, political [31mparty affiliation[39m (e.g., Republican, Democrat) but n
-    ## [34545946] .g., Republican, Democrat) but not [31mpolitical ideology[39m (e.g., conservative, liberal) pred
-    ## [34545946]  When assessed together, political [31mparty affiliation[39m but not political ideology signifi
-    ## [34545946] olitical party affiliation but not [31mpolitical ideology[39m significantly predicted face mask 
-    ## [34508051] ucts in relationships moderated by [31mpolitical ideology[39m. Public health messages targeting
+    ## [34665062]  a priori moral values informed by |political ideology|. This perspective is particularly 
+    ## [34630247]                       The dominant |political ideology| of recent decades, neoliberalism, 
+    ## [34605280] ity, positive COVID diagnosis, and |political ideology|. Univariate analysis and logistic 
+    ## [34594280] pers, blogs, and social networks), |political ideology|, vote, trust in institutions, and 
+    ## [34592973] tion. As in studies of the public, |political ideology| and the observation of local clima
+    ## [34580214]  variables and only weakly reflect |political ideology|. Moral cosmopolitanism also differ
+    ## [34545946]  when assessed together, political |party affiliation| (e.g., Republican, Democrat) but n
+    ## [34545946] .g., Republican, Democrat) but not |political ideology| (e.g., conservative, liberal) pred
+    ## [34545946]  When assessed together, political |party affiliation| but not political ideology signifi
+    ## [34545946] olitical party affiliation but not |political ideology| significantly predicted face mask 
+    ## [34508051] ucts in relationships moderated by |political ideology|. Public health messages targeting
 
 ### Sentences containing X
 

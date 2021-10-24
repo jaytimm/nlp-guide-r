@@ -276,12 +276,6 @@ annotation$newness <- udpipe::txt_recode_ngram(tolower(annotation$token),
                                                compound = c(nps1$keyword),
                                                ngram = c(nps1$ngram),
                                                sep = '_')
-
-annotation %>%
-  select(doc_id, token:xpos, newness) %>%
-  filter(grepl('_', newness)) %>%
-  head() %>%
-  knitr::kable()
 ```
 
 
@@ -361,7 +355,7 @@ ctrialsgov::ctgov_kwic(term = 'political ideology|party affiliation',
                        text = abstracts[[1]]$abstract, 
                        names = abstracts[[1]]$pmid, 
                        width = 35,
-                       use_color = T,
+                       #use_color = T,
                        output = 'cat') #'data.frame'
 ```
 
