@@ -57,6 +57,8 @@ strwrap(abstracts[[1]]$abstract, width = 60)[1:10]
 
 ### Tweets
 
+#### Search-based
+
 ```{r}
 tweets <-  rtweet::search_tweets(q = 'political ideology',
                                  n = 100,
@@ -70,7 +72,39 @@ tweets <-  rtweet::search_tweets(q = 'political ideology',
 strwrap(tweets$text[1], width = 60)
 ```
 
+#### US Congress
 
+```{r eval=FALSE, include=FALSE}
+tk <- rtweet::create_token(
+  app = "jtimm",
+  consumer_key = "tydea0GTk9cz7byVZiHUZe6Sb",
+  consumer_secret = "ZVKvVeoNL1A5SWajcU11G1dRLtHI6ZvabSueqUHkPuLNwUjE6X",
+  access_token = "965072442954690560-0hJ59HBuzs7b54DTCXj4z93iVtSTm7R",
+  access_secret = "60Ohpze1J78RBl620KlHmadHGANcI9Sr4FlLByIqBUP2i")
+```
+
+
+```{r eval=FALSE}
+house_meta <- read.csv(url('https://theunitedstates.io/congress-legislators/legislators-current.csv')) 
+  # mutate(district = ifelse(district == 0, 'AL', district),
+  #        CD = paste0(state, '-', stringr::str_pad(district, 2, pad = '0')),
+  #        twitter = toupper(twitter))
+
+handles <- unique(subset(house_meta, twitter != '')$twitter)
+  
+congress_tweets <- rtweet::get_timeline( 
+  handles, 
+  n = 100,
+  check = FALSE,
+  token = tk) 
+
+congress_tweets$created_at <- as.Date(gsub(' .*$', '', congress_tweets$created_at))
+```
+
+```{r eval=FALSE, include=FALSE}
+setwd('/home/jtimm/pCloudDrive/GitHub/data_sets')
+saveRDS(congress_tweets, 'ctweets.rds')
+```
 
 
 ## Processing
@@ -392,7 +426,7 @@ ctrialsgov::ctgov_kwic(term = 'political ideology|party affiliation',
 
 
 
-### Sentences containing X
+### Sentence search
 
 ```{r}
 eg_sentences <- df[, if(any(token %in% c('QAnon'))) .SD, 
